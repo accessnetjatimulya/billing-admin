@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Data Invoice - ACCESSNET</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body{ margin:0; background:#f4f7f6; font-family:Arial,sans-serif; }
+    .mobile-topbar { display: none; background: #2c3e50; padding: 10px 15px; color: #fff; position: fixed; top: 0; left: 0; right: 0; z-index: 1001; }
+    .sidebar{ position:fixed; top:0; left:0; width:250px; height:100vh; background:#2c3e50; padding:20px; overflow-y:auto; z-index:1000; transition: transform 0.3s ease; }
+    .sidebar h4{ color:#fff; }
+    .btn-sidebar{ display: block; width:100%; text-align:left; color:#bdc3c7; margin-bottom:8px; border:none; text-decoration: none; padding: 10px; border-radius: 5px; }
+    .btn-sidebar:hover, .btn-sidebar.active{ background:#0d6efd !important; color:#fff !important; font-weight:bold; }
+    .main-content{ margin-left:250px; padding:20px; transition: margin 0.3s ease; }
+    .card{ border:none; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.1); }
+    @media(max-width:991.98px){
+      .mobile-topbar { display: flex; justify-content: space-between; align-items: center; }
+      .sidebar{ transform: translateX(-100%); top: 56px; height: calc(100vh - 56px); width: 280px; }
+      .sidebar.show { transform: translateX(0); }
+      .main-content{ margin-left:0; padding-top: 76px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="main-content">
+  <div class="card p-3 p-md-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+      <h3 class="mb-0 fs-4 fs-md-3">Data Invoice</h3>
+      <input type="text" id="searchInvoice" class="form-control w-100 w-md-auto" placeholder="Cari Invoice / Nama / ID" style="max-width:350px" onkeyup="filterInvoice()">
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead class="table-dark">
+          <tr>
+            <th>No Invoice</th>
+            <th>Tanggal</th>
+            <th>ID Pelanggan</th>
+            <th>Nama</th>
+            <th>Periode</th>
+            <th>Paket</th>
+            <th>Total</th>
+            <th>PDF</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tabelInvoiceBody">
+          <tr><td colspan="9" class="text-center">Memuat data invoice...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="global.js"></script>
+<script>
+  renderNavigation('data-invoice');
+
+  window.onload = function(){ loadDataInvoice(); };
+
+  function loadDataInvoice(){
+    const tbody = document.getElementById("tabelInvoiceBody");
+    callAPI('getDataInvoice', null, function(data){
+      if(!data || data.length === 0){
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center">Tidak ada data invoice</td></tr>';
+        return;
+      }
+      let html = '';
+      data.forEach(function(inv){
+        html += `
+          <tr>
+            <td>${inv.NO_INVOICE}</td>
+            <td>${inv.TANGGAL}</td>
+            <td>${inv.ID}</td>
+            <td>${inv.NAMA}</td>
+            <td>${inv.PERIODE}</td>
+            <td>${inv.PAKET}</td>
+            <td>Rp. ${Number(inv.TAGIHAN).toLocaleString('id-ID')}</td>
+            <td>${inv.PDF ? `<a href="${inv.PDF}" target="_blank" class="btn btn-sm btn-danger">PDF</a>` : '-'}</td>
+            <td><button class="btn btn-sm btn-dark" onclick="hapusInvoice('${inv.NO_INVOICE}')">Hapus</button></td>
+          </tr>`;
+      });
+      tbody.innerHTML = html;
+    });
+  }
+
+  function filterInvoice(){
+    const keyword = document.getElementById('searchInvoice').value.toLowerCase();
+    document.querySelectorAll('#tabelInvoiceBody tr').forEach(row => {
+      row.style.display = row.innerText.toLowerCase().includes(keyword) ? '' : 'none';
+    });
+  }
+
+  function hapusInvoice(noInvoice){
+    if(confirm('Yakin ingin menghapus invoice ini?')) {
+      callAPI('deleteInvoice', noInvoice, () => loadDataInvoice());
+    }
+  }
+</script>
+</body>
+</html>

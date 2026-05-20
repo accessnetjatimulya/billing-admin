@@ -1,0 +1,56 @@
+// ==========================================
+// CONFIG: PASTE URL WEB APP APPS SCRIPT DI SINI
+// ==========================================
+const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbxKPhALuyMxM8Td2d2AchmNQ1BENmN-fHva8h7ctzZk6QD29nPcZFDFj0pNOEbP8WwU/exec";
+
+// Fungsi Global Jembatan API
+function callAPI(action, data, onSuccess, onFailure) {
+  const payload = { action: action, data: data };
+  fetch(URL_APPS_SCRIPT, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(payload)
+  })
+  .then(res => res.json())
+  .then(response => {
+    if (response.status === "error") {
+      if (onFailure) onFailure(response.message);
+      else alert("Error: " + response.message);
+    } else {
+      if (onSuccess) onSuccess(response.data);
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    if (onFailure) onFailure(err);
+    else alert("Gagal terhubung ke server backend.");
+  });
+}
+
+// Fungsi Otomatis Render Topbar & Sidebar di setiap halaman
+function renderNavigation(activeMenu) {
+  const topbarHtml = `
+    <div class="mobile-topbar">
+      <h5 class="mb-0">ACCESSNET</h5>
+      <button class="btn btn-outline-light btn-sm" type="button" onclick="toggleSidebar()">☰ Menu</button>
+    </div>
+  `;
+
+  const sidebarHtml = `
+    <div class="sidebar" id="sidebarMenu">
+      <h4 class="text-center mb-4 d-none d-lg-block">ACCESSNET</h4>
+      <hr class="text-white d-none d-lg-block">
+      <a href="index.html" class="btn btn-sidebar ${activeMenu === 'dashboard' ? 'active' : ''}">📊 Dashboard</a>
+      <a href="pelanggan.html" class="btn btn-sidebar ${activeMenu === 'pelanggan' ? 'active' : ''}">👥 Data Pelanggan</a>
+      <a href="invoice-tagihan.html" class="btn btn-sidebar ${activeMenu === 'invoice-tagihan' ? 'active' : ''}">🧾 Invoice Tagihan</a>
+      <a href="data-invoice.html" class="btn btn-sidebar ${activeMenu === 'data-invoice' ? 'active' : ''}">📁 Data Invoice</a>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML('afterbegin', sidebarHtml);
+  document.body.insertAdjacentHTML('afterbegin', topbarHtml);
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebarMenu').classList.toggle('show');
+}
