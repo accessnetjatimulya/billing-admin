@@ -25,7 +25,6 @@
       font-weight: bold;
     }
 
-    /* FIX: Scroll container aktif jika pratinjau terlalu tinggi di layar laptop/HP kecil */
     .pdf-scroll-container {
       overflow-x: auto;
       overflow-y: auto;
@@ -42,6 +41,7 @@
       .main-content{ margin-left:0; padding-top: 76px; }
     }
 
+    /* Penjinak Preview Responsif Layar HP */
     @media (max-width: 830px) { #invoicePdfArea { transform: scale(0.9); transform-origin: top center; margin-bottom: -100px !important; } }
     @media (max-width: 720px) { #invoicePdfArea { transform: scale(0.75); margin-bottom: -250px !important; } }
     @media (max-width: 576px) { #invoicePdfArea { transform: scale(0.55); margin-bottom: -480px !important; } }
@@ -123,32 +123,32 @@
         <div class="text-muted small mb-2 fw-bold text-uppercase">Pratinjau Lembar Invoice Konten PDF:</div>
 
         <div class="pdf-scroll-container">
-          <div id="invoicePdfArea" style="width:794px; min-height:1123px; background:#fff; margin:auto; padding:14px 40px; box-sizing:border-box; font-family:Arial,sans-serif; color:#222; position:relative;">
+          <div id="invoicePdfArea" style="width:794px; min-height:1123px; max-height:1123px; overflow:hidden; background:#fff; margin:auto; padding:20px 40px; box-sizing:border-box; font-family:Arial,sans-serif; color:#222; position:relative;">
             
             <table style="width:100%; border-collapse:collapse;">
               <tr>
                 <td style="width:45%; vertical-align:top;">
-                  <img id="logoAccessnet" src="https://drive.google.com/thumbnail?id=1rhcXNzvzkK9p7gaFB6W3HQOPyR_mgooe" style="width:240px; display:block;">
+                  <img id="logoAccessnet" src="" style="width:240px; display:block;">
                 </td>
                 <td style="text-align:right; font-size:12px; line-height:1.4;">
-                  <div style="font-size:20px; font-weight:bold;">TEKNOLOGI JATIMULYA - ACCESSNET</div>
+                  <div style="font-size:19px; font-weight:bold;">TEKNOLOGI JATIMULYA - ACCESSNET</div>
                   <div>Desa Jatimulya Blok Pedati 2 RT 01 RW 07 Kec Terisi Kab. Indramayu</div>
                   <div style="font-weight:bold;">Support By RSTNet PT. SMART TEKNOLOGI UTAMA</div>
                 </td>
               </tr>
             </table>
 
-            <hr style="margin:10px 0 20px 0; border:none; border-top:3px solid #000; width:100%;">
+            <hr style="margin:10px 0 15px 0; border:none; border-top:3px solid #000; width:100%;">
 
-            <div style="text-align:center; font-size:28px; font-weight:bold; letter-spacing:0.5px; margin:6px 0;">
+            <div style="text-align:center; font-size:26px; font-weight:bold; letter-spacing:0.5px; margin:4px 0;">
               INVOICE INTERNET PELANGGAN
             </div>
 
-            <table style="width:100%; background:#f8fafc; padding:10px; border-collapse:collapse; font-size:15px; line-height:1.7;">
+            <table style="width:100%; background:#f8fafc; padding:8px; border-collapse:collapse; font-size:14px; line-height:1.6;">
               <tr>
                 <td colspan="3"><b>KEPADA YTH :</b></td>
                 <td style="text-align:right; color:#000; white-space:nowrap;">NO. INVOICE :</td>
-                <td id="pdfInvoice" style="text-align:right; font-weight:bold; font-size:14px; white-space:nowrap; padding-left:8px;"></td>
+                <td id="pdfInvoice" style="text-align:right; font-weight:bold; font-size:13px; white-space:nowrap; padding-left:8px;"></td>
               </tr>
               <tr>
                 <td style="width:90px;">IDPEL</td>
@@ -180,94 +180,93 @@
               </tr>
             </table>
 
-            <table style="width:100%; border-collapse:collapse; margin-top:15px; font-size:15px;">
+            <table style="width:100%; border-collapse:collapse; margin-top:12px; font-size:14px;">
               <thead>
                 <tr style="background:#f3f4f6; color:#6b7280;">
-                  <th style="width:6%; padding:10px 8px; border-top:1px solid #ddd; border-bottom:1px solid #ddd; text-align:center;">#</th>
-                  <th style="width:48%; padding:10px 8px; border-top:1px solid #ddd; border-bottom:1px solid #ddd; text-align:left;">DESKRIPSI</th>
-                  <th style="width:16%; padding:10px 8px; border-top:1px solid #ddd; border-bottom:1px solid #ddd; text-align:right;">HARGA</th>
-                  <th style="width:14%; padding:10px 8px; border-top:1px solid #ddd; border-bottom:1px solid #ddd; text-align:center;">QTY</th>
-                  <th style="width:16%; padding:10px 8px; border-top:1px solid #ddd; border-bottom:1px solid #ddd; text-align:right;">TOTAL</th>
+                  <th style="width:6%; padding:8px; border-top:1px solid #ddd; border-bottom:1px solid #ddd; text-align:center;">#</th>
+                  <th style="width:48%; padding:8px; border-top:1px solid #ddd; border-bottom:1px solid #ddd; text-align:left;">DESKRIPSI</th>
+                  <th style="width:16%; padding:8px; border-top:1px solid #ddd; border-bottom:1px solid #ddd; text-align:right;">HARGA</th>
+                  <th style="width:14%; padding:8px; border-top:1px solid #ddd; border-bottom:1px solid #ddd; text-align:center;">QTY</th>
+                  <th style="width:16%; padding:8px; border-top:1px solid #ddd; border-bottom:1px solid #ddd; text-align:right;">TOTAL</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td style="padding:10px 18px; border-bottom:1px solid #ddd; text-align:center;">1</td>
-                  <td id="pdfDeskripsi" style="padding:10px 8px; border-bottom:1px solid #ddd;"></td>
-                  <td id="pdfHarga" style="padding:10px 8px; border-bottom:1px solid #ddd; text-align:right;"></td>
-                  <td style="padding:10px 8px; border-bottom:1px solid #ddd; text-align:center;">1</td>
-                  <td id="pdfSubtotal" style="padding:10px 8px; border-bottom:1px solid #ddd; text-align:right;"></td>
+                  <td style="padding:8px; border-bottom:1px solid #ddd; text-align:center;">1</td>
+                  <td id="pdfDeskripsi" style="padding:8px; border-bottom:1px solid #ddd;"></td>
+                  <td id="pdfHarga" style="padding:8px; border-bottom:1px solid #ddd; text-align:right;"></td>
+                  <td style="padding:8px; border-bottom:1px solid #ddd; text-align:center;">1</td>
+                  <td id="pdfSubtotal" style="padding:8px; border-bottom:1px solid #ddd; text-align:right;"></td>
                 </tr>
               </tbody>
             </table>
 
-            <table style="width:100%; border-collapse:collapse; margin-top:0; font-size:15px;">
+            <table style="width:100%; border-collapse:collapse; margin-top:0; font-size:14px;">
               <tr>
-                <td colspan="2" style="border-top:1px solid #ddd; padding:10px 8px;"></td>
-                <td style="width:16%; border-top:1px solid #ddd; padding:10px 8px;"></td>
-                <td style="width:14%; border-top:1px solid #ddd; padding:10px 8px; text-align:right; font-weight:bold; white-space:nowrap;">SUBTOTAL :</td>
-                <td id="pdfSub" style="width:16%; border-top:1px solid #ddd; padding:10px 8px; text-align:right; white-space:nowrap;"></td>
+                <td colspan="2" style="border-top:1px solid #ddd; padding:6px 8px;"></td>
+                <td style="width:16%; border-top:1px solid #ddd; padding:6px 8px;"></td>
+                <td style="width:14%; border-top:1px solid #ddd; padding:6px 8px; text-align:right; font-weight:bold; white-space:nowrap;">SUBTOTAL :</td>
+                <td id="pdfSub" style="width:16%; border-top:1px solid #ddd; padding:6px 8px; text-align:right; white-space:nowrap;"></td>
               </tr>
               <tr>
-                <td colspan="2" style="border-top:1px solid #ddd; padding:10px 8px;"></td>
-                <td style="width:16%; border-top:1px solid #ddd; padding:10px 8px;"></td>
-                <td style="width:14%; border-top:1px solid #ddd; padding:10px 8px; text-align:right; font-weight:bold; white-space:nowrap;">DISCOUNT :</td>
-                <td id="pdfDiskon" style="width:16%; border-top:1px solid #ddd; padding:10px 8px; text-align:right; white-space:nowrap;">Rp 0</td>
+                <td colspan="2" style="border-top:1px solid #ddd; padding:6px 8px;"></td>
+                <td style="width:16%; border-top:1px solid #ddd; padding:6px 8px;"></td>
+                <td style="width:14%; border-top:1px solid #ddd; padding:6px 8px; text-align:right; font-weight:bold; white-space:nowrap;">DISCOUNT :</td>
+                <td id="pdfDiskon" style="width:16%; border-top:1px solid #ddd; padding:6px 8px; text-align:right; white-space:nowrap;">Rp 0</td>
               </tr>
               <tr>
-                <td colspan="2" style="border-top:1px solid #ddd; padding:10px 8px;"></td>
-                <td style="width:16%; border-top:1px solid #ddd; padding:10px 8px;"></td>
-                <td style="width:14%; border-top:1px solid #ddd; padding:14px 8px; text-align:right; font-weight:bold; white-space:nowrap;">BIAYA ADMIN :</td>
-                <td id="pdfAdmin" style="width:16%; border-top:1px solid #ddd; padding:14px 8px; text-align:right; white-space:nowrap;">Rp 0</td>
+                <td colspan="2" style="border-top:1px solid #ddd; padding:6px 8px;"></td>
+                <td style="width:16%; border-top:1px solid #ddd; padding:6px 8px;"></td>
+                <td style="width:14%; border-top:1px solid #ddd; padding:6px 8px; text-align:right; font-weight:bold; white-space:nowrap;">BIAYA ADMIN :</td>
+                <td id="pdfAdmin" style="width:16%; border-top:1px solid #ddd; padding:6px 8px; text-align:right; white-space:nowrap;">Rp 0</td>
               </tr>
               <tr>
-                <td colspan="2" style="border-top:2px solid #000; padding:14px 8px;"></td>
-                <td style="width:16%; border-top:2px solid #000; padding:14px 8px;"></td>
-                <td style="width:14%; border-top:2px solid #000; padding:14px 8px; text-align:right; font-weight:bold; font-size:16px; white-space:nowrap;">TOTAL TAGIHAN :</td>
-                <td id="pdfGrand" style="width:16%; border-top:2px solid #000; padding:14px 8px; text-align:right; font-weight:bold; font-size:16px; white-space:nowrap;"></td>
+                <td colspan="2" style="border-top:2px solid #000; padding:8px;"></td>
+                <td style="width:16%; border-top:2px solid #000; padding:8px;"></td>
+                <td style="width:14%; border-top:2px solid #000; padding:8px; text-align:right; font-weight:bold; font-size:15px; white-space:nowrap;">TOTAL TAGIHAN :</td>
+                <td id="pdfGrand" style="width:16%; border-top:2px solid #000; padding:8px; text-align:right; font-weight:bold; font-size:15px; white-space:nowrap;"></td>
               </tr>
             </table>
 
-            <div style="font-size:14px;font-style:italic;margin-bottom: 0px;">
+            <div style="font-size:13px; font-style:italic; margin-bottom: 0px;">
               *) Total tagihan di atas sudah termasuk biaya pajak penggunaan internet anda
             </div>
-            <div style="margin-top:8px; text-align:center; font-size:15px;">
+            <div style="margin-top:6px; text-align:center; font-size:14px;">
               Pembayaran internet setiap bulannya dapat dilakukan dengan datang langsung ke kantor ACCESSNET<br>
               Atau bisa juga dilakukan lewat Scan QRIS / transfer ke No. Rekening di bawah ini :
             </div>
 
-            <table style="width:100%; margin-top:15px; font-size:15px; font-weight:bold; border-collapse: collapse;">
+            <table style="width:100%; margin-top:10px; font-size:14px; font-weight:bold; border-collapse: collapse;">
               <tr>
-                <td style="width: 50%; padding: 15px; text-align: center; border-bottom: 1px solid #eee; vertical-align: middle;">
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/a/ac/SeaBank.svg" style="width:80px; margin-bottom:8px;"><br>
+                <td style="width: 50%; padding: 10px; text-align: center; border-bottom: 1px solid #eee; vertical-align: middle;">
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/a/ac/SeaBank.svg" style="width:75px; margin-bottom:4px;"><br>
                   <b>Rekening : 901719800584</b><br>Atas Nama : A. YANI
                 </td>
-                <td rowspan="3" style="width: 50%; padding: 20px; text-align: center; vertical-align: middle; border-left: 2px solid #ddd;">
-                  <img id="qrisAccessnet" src="https://drive.google.com/thumbnail?id=1xEiSuIVuzu379VLMsOIK3X6xs0QmDdRA" style="width: 225px; max-width: 100%; margin-bottom: 10px; border-radius: 6px;"><br>
-                  <span style="font-size: 18px; color: #111;">QRIS Pembayaran</span><br>
+                <td rowspan="3" style="width: 50%; padding: 10px; text-align: center; vertical-align: middle; border-left: 2px solid #ddd;">
+                  <img id="qrisAccessnet" src="" style="width: 195px; max-width: 100%; margin-bottom: 6px; border-radius: 6px;"><br>
+                  <span style="font-size: 16px; color: #111;">QRIS Pembayaran</span><br>
                   <small style="font-weight: bold; color: #000;">Atas Nama : ACCESSNET JATIMULYA<br>Link Konfirmasi Pembayaran :<br> https://billing.accessnet.my.id </small>
                 </td>
               </tr>
               <tr>
-                <td style="padding: 15px; text-align: center; border-bottom: 1px solid #eee; vertical-align: middle;">
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/5/5c/Bank_Central_Asia.svg" style="width:80px; margin-bottom:8px;"><br>
+                <td style="padding: 10px; text-align: center; border-bottom: 1px solid #eee; vertical-align: middle;">
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/5/5c/Bank_Central_Asia.svg" style="width:75px; margin-bottom:4px;"><br>
                   <b>Rekening : 3020607547</b><br>Atas Nama : A. YANI
                 </td>
               </tr>
               <tr>
-                <td style="padding: 15px; text-align: center; vertical-align: middle;">
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/a/ad/Bank_Mandiri_logo_2016.svg" style="width:80px; margin-bottom:8px;"><br>
+                <td style="padding: 10px; text-align: center; vertical-align: middle;">
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/a/ad/Bank_Mandiri_logo_2016.svg" style="width:75px; margin-bottom:4px;"><br>
                   <b>Rekening : 1340032691437</b><br>Atas Nama : A. Fikri Haikal
                 </td>
               </tr>
             </table>
 
-            <div style="margin-top:8px; text-align:center; font-size:15px;">
+            <div style="margin-top:6px; text-align:center; font-size:14px;">
               *)Keterangan : Kirim bukti transfer pembayaran berupa screenshoot / foto dengan rinci dan jelas ke <br>
               nomor Whatsapp : <b>0851-3888-8845</b>, dengan menyertakan Nama & NO IDPEL ( ID Pelanggan )
             </div>
           </div>
-
         </div>
       </div>
       <div class="modal-footer">
@@ -291,10 +290,22 @@
   let modalInvoiceInstance = null;
   let baseNominalHarga = 0;
   let statusSistemExpired = false;
+  let jumlahLompatBulanTerpilih = 1;
 
   window.onload = function() {
     ambilWaktuInternetDanLoad();
+    loadAsetGambarBase64(); 
   };
+
+  function loadAsetGambarBase64() {
+    callAPI('getLogoBase64', null, function(base64Kode) {
+      if(base64Kode) { document.getElementById('logoAccessnet').src = base64Kode; }
+    }, function(err) { console.error("Gagal sinkronisasi b64 logo", err); });
+
+    callAPI('getQrisBase64', null, function(base64Kode) {
+      if(base64Kode) { document.getElementById('qrisAccessnet').src = base64Kode; }
+    }, function(err) { console.error("Gagal sinkronisasi b64 qris", err); });
+  }
 
   async function ambilWaktuInternetDanLoad(){
     let today = new Date();
@@ -319,7 +330,6 @@
     
     internetTimeFetched = today;
     
-    // FIX: Menggunakan arsitektur callAPI bawaan dari global.js untuk menarik data real pelanggan
     callAPI('getPelangganData', null, function(data) {
       allPelanggan = data || [];
       renderTagihanTable();
@@ -438,7 +448,7 @@
     }
 
     let startCalcDate = new Date(today.getFullYear(), today.getMonth() - 2, 1);
-    let firstValidSelected = false;
+    let counterValid = 0;
 
     for (let i = 0; i < 8; i++) {
       let currentMonth = startCalcDate.getMonth();
@@ -457,9 +467,10 @@
         opt.style.color = "#dc3545";
         opt.innerText += " (SUDAH DIBAYAR)";
       } else {
-        if (!firstValidSelected) {
+        counterValid++;
+        opt.setAttribute('data-index-lompat', counterValid); 
+        if (counterValid === 1) {
           opt.selected = true;
-          firstValidSelected = true;
         }
       }
       
@@ -508,7 +519,12 @@
 
   function updateLivePreviewInvoice() {
     const rawTglBayar = document.getElementById('inputTanggalBayar').value; 
-    const periode = document.getElementById('inputPeriodeTagihan').value;
+    const dropdownPeriode = document.getElementById('inputPeriodeTagihan');
+    const periode = dropdownPeriode.value;
+    
+    const optTerpilih = dropdownPeriode.options[dropdownPeriode.selectedIndex];
+    jumlahLompatBulanTerpilih = optTerpilih ? (parseInt(optTerpilih.getAttribute('data-index-lompat')) || 1) : 1;
+
     const discount = Number(document.getElementById('inputDiscount').value) || 0;
     const biayaAdmin = Number(document.getElementById('inputBiayaAdmin').value) || 0;
 
@@ -518,7 +534,12 @@
       tglBayarFormatCetak = `${s[2]}/${s[1]}/${s[0]}`;
     }
 
-    const totalTagihan = baseNominalHarga - discount + biayaAdmin;
+    const subTotalDinamis = baseNominalHarga * jumlahLompatBulanTerpilih;
+    const totalTagihan = subTotalDinamis - discount + biayaAdmin;
+
+    document.getElementById('pdfHarga').innerText = 'Rp ' + baseNominalHarga.toLocaleString('id-ID');
+    document.getElementById('pdfSubtotal').innerText = 'Rp ' + subTotalDinamis.toLocaleString('id-ID');
+    document.getElementById('pdfSub').innerText = 'Rp ' + subTotalDinamis.toLocaleString('id-ID');
 
     document.getElementById('pdfTanggal').innerText = tglBayarFormatCetak;
     document.getElementById('pdfPeriode').innerText = periode || '-';
@@ -527,66 +548,96 @@
     document.getElementById('pdfGrand').innerText = 'Rp ' + totalTagihan.toLocaleString('id-ID');
   }
 
-  // FIX: Menggunakan callAPI global.js untuk aksi "simpanInvoice" ke Google Apps Script backend
+  // --- LOGIKA UTAMA SINKRON CONTOH.HTML (ANTI BLANK 2 HALAMAN) ---
   function prosesSimpanInvoiceSesuaiPreviewHtml() {
     const p = allPelanggan.find(x => x.ID == idPelangganDipilih);
     if (!p) return;
 
     const btnProses = document.getElementById('btnSimpanInvoiceFinal');
     btnProses.disabled = true;
-    btnProses.innerText = "⏳ Saving to Cloud...";
+    btnProses.innerText = "⏳ Memproses...";
 
-    const nomorInvoice = document.getElementById('pdfInvoice').innerText;
     const element = document.getElementById('invoicePdfArea');
 
-    const opt = { 
-      margin: 0, 
-      filename: nomorInvoice + '.pdf', 
-      image: { type: 'jpeg', quality: 1 },
-      html2canvas: { scale: 2, useCORS: true }, 
-      jsPDF: { format: [794, 1123], unit: 'px', orientation: 'portrait' } 
+    // Meniru contoh.html: Konfigurasi dimensi pixel kertas A4 murni
+    const opt = {
+      margin:       0,
+      filename:     document.getElementById('pdfInvoice').innerText + '.pdf',
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { 
+        scale: 2, 
+        useCORS: true, 
+        logging: false,
+        letterRendering: true
+      },
+      jsPDF:        { unit: 'px', format: [794, 1123], orientation: 'portrait' }
     };
-    
-    try {
-      html2pdf().set(opt).from(element).outputPdf('blob').then(function(pdfBlob) {
-        const reader = new FileReader();
-        reader.readAsDataURL(pdfBlob);
-        reader.onloadend = function(){
-          const base64DataRaw = reader.result.split(',')[1];
-          
-          const dataKirimBackend = {
-            noInvoice: nomorInvoice,
-            tanggal: document.getElementById('pdfTanggal').innerText,
-            id: document.getElementById('pdfIdpel').innerText,
-            nama: document.getElementById('pdfNama').innerText,
-            periode: document.getElementById('inputPeriodeTagihan').value,
-            paket: document.getElementById('pdfDeskripsi').innerText,
-            tagihan: document.getElementById('pdfGrand').innerText,
-            base64: base64DataRaw,
-            isExpired: statusSistemExpired
-          };
 
-          // Memanggil API Cloud Apps Script secara sinkron lewat global.js milikmu
-          callAPI('simpanInvoice', dataKirimBackend, function(urlDrivePdf) {
-            alert('Invoice berhasil dikirim & disimpan ke Google Drive!');
-            p.SUDAH_DIBAYAR_SEKARANG = true;
-            p.URL_PDF_GENERATED = urlDrivePdf;
-            
-            html2pdf().set(opt).from(element).save(); // Download offline browser klien
-            if(urlDrivePdf && urlDrivePdf !== "#") { window.open(urlDrivePdf, '_blank'); }
-            
-            bersihkanModal();
-          }, function(errMessage) {
-            alert('Gagal memproses Cloud: ' + errMessage);
-            resetTombolSelesai(btnProses);
-          });
+    // Meniru contoh.html: Ambil kondisi awal transform responsif mobile
+    const originalTransform = element.style.transform;
+    const originalMargin = element.style.marginBottom;
+    const originalPosition = element.style.position;
+    const originalLeft = element.style.left;
+
+    // Meniru contoh.html: Reset paksa ke default agar kamera canvas merekam skala 1:1 murni
+    element.style.transform = 'none';
+    element.style.marginBottom = '0px';
+    element.style.position = 'static';
+    element.style.left = '0px';
+
+    // Delay kecil 250ms untuk menstabilkan gambar Base64 di memori sebelum dipotret pustaka
+    setTimeout(() => {
+      html2pdf().set(opt).from(element).toPdf().get('pdf').then(function (pdf) {
+        
+        // Kembalikan style responsif layar mobile HP agar tampilan preview tidak rusak kembali
+        element.style.transform = originalTransform;
+        element.style.marginBottom = originalMargin;
+        element.style.position = originalPosition;
+        element.style.left = originalLeft;
+
+        // Ambil string base64 murni PDF untuk dikirim ke Google Drive
+        const base64DataRaw = pdf.output('datauristring').split(',')[1];
+
+        const dataKirimBackend = {
+          noInvoice: document.getElementById('pdfInvoice').innerText,
+          tanggal: document.getElementById('pdfTanggal').innerText,
+          id: document.getElementById('pdfIdpel').innerText,
+          nama: document.getElementById('pdfNama').innerText,
+          periode: document.getElementById('inputPeriodeTagihan').value,
+          paket: document.getElementById('pdfDeskripsi').innerText,
+          tagihan: document.getElementById('pdfGrand').innerText,
+          base64: base64DataRaw,
+          isExpired: statusSistemExpired,
+          jumlahBulan: jumlahLompatBulanTerpilih
         };
+
+        // Kirim data ke Cloud Google Sheets via global.js
+        callAPI('simpanInvoice', dataKirimBackend, function(urlDrivePdf) {
+          alert('Invoice berhasil dikirim & disimpan ke Google Drive!');
+          p.SUDAH_DIBAYAR_SEKARANG = true;
+          p.URL_PDF_GENERATED = urlDrivePdf;
+          
+          // Download offline di sisi client browser laptop/HP
+          html2pdf().set(opt).from(element).save(); 
+          
+          if(urlDrivePdf && urlDrivePdf !== "#") { window.open(urlDrivePdf, '_blank'); }
+          
+          bersihkanModal();
+        }, function(errMessage) {
+          alert('Gagal memproses Cloud: ' + errMessage);
+          resetTombolSelesai(btnProses);
+        });
+
+      }).catch(err => {
+        element.style.transform = originalTransform;
+        element.style.marginBottom = originalMargin;
+        element.style.position = originalPosition;
+        element.style.left = originalLeft;
+        console.error(err);
+        alert('Gagal generate PDF');
+        resetTombolSelesai(btnProses);
       });
-    } catch(err) {
-      console.error(err);
-      alert('Gagal generate PDF');
-      resetTombolSelesai(btnProses);
-    }
+    }, 250);
   }
 
   function bersihkanModal() {
