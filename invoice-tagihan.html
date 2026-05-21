@@ -117,13 +117,39 @@
               <input type="number" id="inputBiayaAdmin" class="form-control" value="0" min="0" oninput="updateLivePreviewInvoice()">
             </div>
           </div>
+			<div class="modal-footer" style="
+					position: relative;
+					display: flex;
+					flex-shrink: 0;
+					flex-wrap: nowrap;
+					align-items: center;
+					justify-content: space-evenly;
+					color: var(--bs-modal-color);
+					background-clip: padding-box;
+					border-top: var(--bs-modal-border-width) solid var(--bs-modal-border-color);
+					border-bottom-right-radius: var(--bs-modal-border-radius);
+					border-bottom-left-radius: var(--bs-modal-border-radius);
+					outline: 0;
+					align-content: space-between;
+				 ">
+
+			  <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">
+				Batalkan Invoice
+			  </button>
+
+			  <button type="button" id="btnSimpanInvoiceFinal" class="btn btn-danger fw-bold px-4" onclick="prosesSimpanInvoiceSesuaiPreviewHtml()">
+				Perpanjang
+			  </button>
+
+			</div>		  
+		  
         </div>
 
         <hr>
         <div class="text-muted small mb-2 fw-bold text-uppercase">Pratinjau Lembar Invoice Konten PDF:</div>
 
         <div class="pdf-scroll-container">
-          <div id="invoicePdfArea" style="width:794px; min-height:1123px; max-height:1123px; overflow:hidden; background:#fff; margin:auto; padding:50px 50px 45px 50px; box-sizing:border-box; font-family:Arial,sans-serif; color:#222; position:relative; display:flex; flex-direction:column; justify-content:space-between;">
+          <div id="invoicePdfArea" style="width:794px; min-height:1123px; max-height:1123px; overflow:hidden; background:#fff; margin:auto; padding:50px 50px 45px 50px; box-sizing:border-box; font-family:Arial,sans-serif; color:#000; position:relative; display:flex; flex-direction:column; justify-content:space-between;">
             
             <div>
               <table style="width:100%; border-collapse:collapse;">
@@ -134,7 +160,7 @@
                   <td style="text-align:right; font-size:12px; line-height:1.4; vertical-align:middle;">
                     <div style="font-size:18px; font-weight:bold; color:#1e3a8a;">TEKNOLOGI JATIMULYA - ACCESSNET</div>
                     <div style="margin-top:2px;">Desa Jatimulya Blok Pedati 2 RT 01 RW 07 Kec Terisi Kab. Indramayu</div>
-                    <div style="font-weight:bold; color:#555; margin-top:2px;">Support By RSTNet PT. SMART TEKNOLOGI UTAMA</div>
+                    <div style="font-weight:bold; color:#000; margin-top:2px;">Support By RSTNet PT. SMART TEKNOLOGI UTAMA</div>
                   </td>
                 </tr>
               </table>
@@ -147,11 +173,11 @@
 
               <table style="width:100%; background:#f8fafc; padding:12px; border-collapse:collapse; font-size:14px; line-height:1.6; border:1px solid #e2e8f0; border-radius:6px;">
                 <tr>
-                  <td style="padding-left:8px; width:100px; color:#555;"><b>KEPADA YTH :</b></td>
-                  <td></td>
+                  <td style="padding-left:8px; width:100px; color:#555;"><b>KEPADA YTH</b></td>
+                   <td style="width:10px;">:</td>
                   <td></td>
                   <td style="text-align:right; color:#555; white-space:nowrap; width:140px;">NO. INVOICE :</td>
-                  <td id="pdfInvoice" style="text-align:right; font-weight:bold; color:#b91c1c; white-space:nowrap; padding-right:8px; width:150px;"></td>
+                  <td id="pdfInvoice" style="text-align:right; font-weight:bold; color:#000000; white-space:nowrap; padding-right:8px; width:150px;"></td>
                 </tr>
                 <tr>
                   <td style="padding-left:8px; color:#555;">IDPEL</td>
@@ -183,51 +209,52 @@
                 </tr>
               </table>
 
-              <table style="width:100%; border-collapse:collapse; margin-top:20px; font-size:14px; border:1px solid #ddd;">
+              <table style="width:100%; border-collapse:collapse; margin-top:20px; font-size:14px;">
                 <thead>
                   <tr style="background:#1e3a8a; color:#fff;">
-                    <th style="width:6%; padding:10px; text-align:center; border:1px solid #ddd;">#</th>
-                    <th style="width:48%; padding:10px; text-align:left; border:1px solid #ddd;">DESKRIPSI LAYANAN</th>
-                    <th style="width:16%; padding:10px; text-align:right; border:1px solid #ddd;">HARGA</th>
-                    <th style="width:14%; padding:10px; text-align:center; border:1px solid #ddd;">QTY</th>
-                    <th style="width:16%; padding:10px; text-align:right; border:1px solid #ddd;">TOTAL</th>
+                    <th style="width:6%; padding:10px; text-align:center;">#</th>
+                    <th style="width:48%; padding:10px; text-align:left;">DESKRIPSI LAYANAN</th>
+                    <th style="width:16%; padding:10px; text-align:right;">HARGA</th>
+                    <th style="width:14%; padding:10px; text-align:center;">QTY</th>
+                    <th style="width:16%; padding:10px; text-align:right;">TOTAL</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td style="padding:12px 10px; border:1px solid #ddd; text-align:center;">1</td>
-                    <td id="pdfDeskripsi" style="padding:12px 10px; border:1px solid #ddd; font-weight:bold;"></td>
-                    <td id="pdfHarga" style="padding:12px 10px; border:1px solid #ddd; text-align:right;"></td>
-                    <td style="padding:12px 10px; border:1px solid #ddd; text-align:center; font-weight:bold;">1</td>
-                    <td id="pdfSubtotal" style="padding:12px 10px; border:1px solid #ddd; text-align:right; font-weight:bold;"></td>
+                  <tr style="border-bottom:1px solid #ddd;">
+                    <td style="padding:15px 10px; text-align:center; font-weight:bold;">1</td>
+                    <td id="pdfDeskripsi" style="padding:15px 10px; font-weight:bold;"></td>
+                    <td id="pdfHarga" style="padding:15px 10px; text-align:right; font-weight:bold;"></td>
+                    <td style="padding:15px 10px; text-align:center; font-weight:bold;">1</td>
+                    <td id="pdfSubtotal" style="padding:15px 10px; text-align:right; font-weight:bold;"></td>
+                  </tr>
+                  
+                  <tr style="border-bottom:1px solid #eee;">
+                    <td colspan="3" style="padding:8px 10px;"></td>
+                    <td style="padding:8px 10px; text-align:right; font-weight:bold; color:#000; white-space:nowrap;">SUBTOTAL :</td>
+                    <td id="pdfSub" style="padding:8px 10px; text-align:right; white-space:nowrap; font-weight:bold;"></td>
+                  </tr>
+                  
+                  <tr style="border-bottom:1px solid #eee;">
+                    <td colspan="3" style="padding:8px 10px;"></td>
+                    <td style="padding:8px 10px; text-align:right; font-weight:bold; color:#000; white-space:nowrap;">DISCOUNT :</td>
+                    <td id="pdfDiskon" style="padding:8px 10px; text-align:right; white-space:nowrap; color:#b91c1c; font-weight:bold;">Rp 0</td>
+                  </tr>
+                  
+                  <tr style="border-bottom:1px solid #eee;">
+                    <td colspan="3" style="padding:8px 10px;"></td>
+                    <td style="padding:8px 10px; text-align:right; font-weight:bold; color:#000; white-space:nowrap;">BIAYA ADMIN :</td>
+                    <td id="pdfAdmin" style="padding:8px 10px; text-align:right; white-space:nowrap; font-weight:bold;">Rp 0</td>
+                  </tr>
+                  
+                  <tr style="border-top:2px solid #1e3a8a; border-bottom: none;">
+                    <td colspan="3" style="padding:12px 10px;"></td>
+                    <td style="padding:12px 10px; text-align:right; font-weight:bold; font-size:16px; color:#000000; white-space:nowrap;">TOTAL TAGIHAN :</td>
+                    <td id="pdfGrand" style="padding:12px 10px; text-align:right; font-weight:bold; font-size:16px; color:#000000; white-space:nowrap;"></td>
                   </tr>
                 </tbody>
               </table>
 
-              <table style="width:100%; border-collapse:collapse; margin-top:10px; font-size:14px;">
-                <tr>
-                  <td colspan="3" style="padding:5px;"></td>
-                  <td style="width:20%; padding:5px; text-align:right; font-weight:bold; color:#555; white-space:nowrap;">SUBTOTAL :</td>
-                  <td id="pdfSub" style="width:16%; padding:5px; text-align:right; white-space:nowrap; font-weight:bold;"></td>
-                </tr>
-                <tr>
-                  <td colspan="3" style="padding:5px;"></td>
-                  <td style="padding:5px; text-align:right; font-weight:bold; color:#555; white-space:nowrap;">DISCOUNT :</td>
-                  <td id="pdfDiskon" style="padding:5px; text-align:right; white-space:nowrap; color:#b91c1c; font-weight:bold;">Rp 0</td>
-                </tr>
-                <tr>
-                  <td colspan="3" style="padding:5px;"></td>
-                  <td style="padding:5px; text-align:right; font-weight:bold; color:#555; white-space:nowrap;">BIAYA ADMIN :</td>
-                  <td id="pdfAdmin" style="padding:5px; text-align:right; white-space:nowrap; font-weight:bold;">Rp 0</td>
-                </tr>
-                <tr>
-                  <td colspan="3" style="border-top:2px solid #1e3a8a; padding:8px 0;"></td>
-                  <td style="border-top:2px solid #1e3a8a; padding:8px 5px; text-align:right; font-weight:bold; font-size:16px; color:#1e3a8a; white-space:nowrap;">TOTAL TAGIHAN :</td>
-                  <td id="pdfGrand" style="border-top:2px solid #1e3a8a; padding:8px 5px; text-align:right; font-weight:bold; font-size:16px; color:#b91c1c; white-space:nowrap;"></td>
-                </tr>
-              </table>
-
-              <div style="font-size:12px; font-style:italic; color:#666; margin-top:2px;">
+              <div style="font-size:12px; font-style:italic; color:#666; margin-top:5px;">
                 *) Total tagihan di atas sudah termasuk biaya pajak penggunaan internet anda
               </div>
             </div>
@@ -240,14 +267,14 @@
 
               <table style="width:100%; font-size:14px; font-weight:bold; border-collapse: collapse; border: 1px solid #e2e8f0; background:#fff; border-radius:6px; overflow:hidden;">
                 <tr>
-                  <td style="width: 50%; padding: 15px; text-align: center; border-bottom: 1px solid #e2e8f0; vertical-align: middle;">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/ac/SeaBank.svg" style="width:80px; margin-bottom:4px;"><br>
+                  <td style="width: 50%; padding: 15px; text-align: center; #border-bottom: 1px solid #e2e8f0; vertical-align: middle;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/ac/SeaBank.svg" style="width:80px; #margin-bottom:4px;"><br>
                     <span>No. Rekening : <b style="color:#1e3a8a; font-size:15px;">901719800584</b></span><br>
-                    <small style="color:#666; font-weight:normal;">Atas Nama : A. YANI</small>
+                    <small style="color:#000; font-weight:bold;">Atas Nama : A. YANI</small>
                   </td>
-                  <td rowspan="3" style="width: 50%; padding: 15px; text-align: center; vertical-align: middle; border-left: 1px solid #e2e8f0; background:#fcfcfc;">
+                  <td rowspan="3" style="width: 50%; padding: 15px; text-align: center; vertical-align: middle; #border-left: 1px solid #e2e8f0; background:#ffffff;">
                     <img id="qrisAccessnet" src="" style="width: 210px; max-width: 100%; margin-bottom: 6px; border: 1px solid #ddd; padding: 3px; background:#fff; border-radius: 4px;"><br>
-                    <span style="font-size: 15px; color: #1e3a8a;">QRIS Pembayaran Resmi</span><br>
+                    <span style="font-size: 12px; color: #000000;">QRIS Pembayaran Resmi</span><br>
                     <small style="font-weight: bold; color: #333; line-height:1.4; display:block; margin-top:2px;">
                       Atas Nama : ACCESSNET JATIMULYA<br>
                       Link Konfirmasi : billing.accessnet.my.id
@@ -255,34 +282,30 @@
                   </td>
                 </tr>
                 <tr>
-                  <td style="padding: 15px; text-align: center; border-bottom: 1px solid #e2e8f0; vertical-align: middle;">
+                  <td style="padding: 15px; text-align: center; #border-bottom: 1px solid #e2e8f0; vertical-align: middle;">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/5/5c/Bank_Central_Asia.svg" style="width:80px; margin-bottom:4px;"><br>
                     <span>No. Rekening : <b style="color:#1e3a8a; font-size:15px;">3020607547</b></span><br>
-                    <small style="color:#666; font-weight:normal;">Atas Nama : A. YANI</small>
+                    <small style="color:#000; font-weight:bold;">Atas Nama : A. YANI</small>
                   </td>
                 </tr>
                 <tr>
                   <td style="padding: 15px; text-align: center; vertical-align: middle;">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/a/ad/Bank_Mandiri_logo_2016.svg" style="width:80px; margin-bottom:4px;"><br>
                     <span>No. Rekening : <b style="color:#1e3a8a; font-size:15px;">1340032691437</b></span><br>
-                    <small style="color:#666; font-weight:normal;">Atas Nama : A. Fikri Haikal</small>
+                    <small style="color:#000; font-weight:bold;">Atas Nama : A. Fikri Haikal</small>
                   </td>
                 </tr>
               </table>
 
-              <div style="margin-top:15px; text-align:center; font-size:13px; color:#444; line-height:1.4;">
+              <div style="margin-top:15px; text-align:center; font-size:13px; color:#000; line-height:1.4;">
                 <b style="color:#b91c1c;">* KETERANGAN:</b> Kirim bukti transfer pembayaran berupa screenshot / foto dengan rinci dan jelas<br>
                 ke nomor Whatsapp Official: <b>0851-3888-8845</b>, dengan menyertakan Nama & NO IDPEL ( ID Pelanggan )
               </div>
             </div>
-
           </div>
         </div>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Batalkan Invoice</button>
-        <button type="button" id="btnSimpanInvoiceFinal" class="btn btn-danger fw-bold px-4" onclick="prosesSimpanInvoiceSesuaiPreviewHtml()">Download PDF</button>
-      </div>
+	  
     </div>
   </div>
 </div>
