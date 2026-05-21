@@ -19,9 +19,17 @@
     .table td { vertical-align: middle; }
     .badge-status { font-weight: bold; padding: 6px 12px; border-radius: 6px; }
 
-    /* CONTAINER RESPONSIVE UNTUK PRATINJAU PREVIEW KERTAS */
+    select option:disabled {
+      color: #dc3545 !important;
+      background-color: #f8d7da !important;
+      font-weight: bold;
+    }
+
+    /* FIX: Scroll container aktif jika pratinjau terlalu tinggi di layar laptop/HP kecil */
     .pdf-scroll-container {
       overflow-x: auto;
+      overflow-y: auto;
+      max-height: 65vh; 
       width: 100%;
       background: #eee;
       padding: 15px 0;
@@ -65,7 +73,7 @@
             <th>Nama</th>
             <th>Paket</th>
             <th>Expired At</th>
-            <th>Periode Tagihan</th>
+            <th>PERIODE</th>
             <th>Status</th>
             <th class="text-center" style="width: 180px;">Aksi</th>
           </tr>
@@ -84,18 +92,43 @@
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Preview Invoice Pelanggan</h5>
+        <h5 class="modal-title">Form Perpanjang & Preview Invoice</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body p-0">
+      <div class="modal-body p-3">
+        <div class="card p-3 bg-light mb-4 border">
+          <h6 class="fw-bold mb-3 text-dark text-uppercase" style="letter-spacing: 0.5px;">Atur Parameter Perpanjangan</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-secondary">Tanggal Bayar</label>
+              <input type="date" id="inputTanggalBayar" class="form-control" onchange="updateLivePreviewInvoice()">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-secondary">Periode Yang Akan Dibayar</label>
+              <select id="inputPeriodeTagihan" class="form-select" onchange="updateLivePreviewInvoice()">
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-secondary">Discount (Rp)</label>
+              <input type="number" id="inputDiscount" class="form-control" value="0" min="0" oninput="updateLivePreviewInvoice()">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-secondary">Biaya Admin (Rp)</label>
+              <input type="number" id="inputBiayaAdmin" class="form-control" value="0" min="0" oninput="updateLivePreviewInvoice()">
+            </div>
+          </div>
+        </div>
+
+        <hr>
+        <div class="text-muted small mb-2 fw-bold text-uppercase">Pratinjau Lembar Invoice Konten PDF:</div>
+
         <div class="pdf-scroll-container">
-          
           <div id="invoicePdfArea" style="width:794px; min-height:1123px; background:#fff; margin:auto; padding:14px 40px; box-sizing:border-box; font-family:Arial,sans-serif; color:#222; position:relative;">
             
             <table style="width:100%; border-collapse:collapse;">
               <tr>
                 <td style="width:45%; vertical-align:top;">
-                  <img id="logoAccessnet" src="https://drive.google.com/thumbnail?id=1rhcXNzvzkK9p7gaFB6W3HQOPyR_mgooe" style="width:240px; display:block;" crossorigin="anonymous">
+                  <img id="logoAccessnet" src="https://drive.google.com/thumbnail?id=1rhcXNzvzkK9p7gaFB6W3HQOPyR_mgooe" style="width:240px; display:block;">
                 </td>
                 <td style="text-align:right; font-size:12px; line-height:1.4;">
                   <div style="font-size:20px; font-weight:bold;">TEKNOLOGI JATIMULYA - ACCESSNET</div>
@@ -159,7 +192,7 @@
               </thead>
               <tbody>
                 <tr>
-                  <td style="padding:10px 18px; border-bottom:1px solid #ddd;">1</td>
+                  <td style="padding:10px 18px; border-bottom:1px solid #ddd; text-align:center;">1</td>
                   <td id="pdfDeskripsi" style="padding:10px 8px; border-bottom:1px solid #ddd;"></td>
                   <td id="pdfHarga" style="padding:10px 8px; border-bottom:1px solid #ddd; text-align:right;"></td>
                   <td style="padding:10px 8px; border-bottom:1px solid #ddd; text-align:center;">1</td>
@@ -184,8 +217,8 @@
               <tr>
                 <td colspan="2" style="border-top:1px solid #ddd; padding:10px 8px;"></td>
                 <td style="width:16%; border-top:1px solid #ddd; padding:10px 8px;"></td>
-                <td style="width:14%; border-top:1px solid #ddd; padding:10px 8px; text-align:right; font-weight:bold; white-space:nowrap;">BIAYA ADMIN :</td>
-                <td id="pdfAdmin" style="width:16%; border-top:1px solid #ddd; padding:10px 8px; text-align:right; white-space:nowrap;">Rp 0</td>
+                <td style="width:14%; border-top:1px solid #ddd; padding:14px 8px; text-align:right; font-weight:bold; white-space:nowrap;">BIAYA ADMIN :</td>
+                <td id="pdfAdmin" style="width:16%; border-top:1px solid #ddd; padding:14px 8px; text-align:right; white-space:nowrap;">Rp 0</td>
               </tr>
               <tr>
                 <td colspan="2" style="border-top:2px solid #000; padding:14px 8px;"></td>
@@ -210,7 +243,7 @@
                   <b>Rekening : 901719800584</b><br>Atas Nama : A. YANI
                 </td>
                 <td rowspan="3" style="width: 50%; padding: 20px; text-align: center; vertical-align: middle; border-left: 2px solid #ddd;">
-                  <img id="qrisAccessnet" src="https://drive.google.com/thumbnail?id=1xEiSuIVuzu379VLMsOIK3X6xs0QmDdRA" style="width: 225px; max-width: 100%; margin-bottom: 10px; border-radius: 6px;" crossorigin="anonymous"><br>
+                  <img id="qrisAccessnet" src="https://drive.google.com/thumbnail?id=1xEiSuIVuzu379VLMsOIK3X6xs0QmDdRA" style="width: 225px; max-width: 100%; margin-bottom: 10px; border-radius: 6px;"><br>
                   <span style="font-size: 18px; color: #111;">QRIS Pembayaran</span><br>
                   <small style="font-weight: bold; color: #000;">Atas Nama : ACCESSNET JATIMULYA<br>Link Konfirmasi Pembayaran :<br> https://billing.accessnet.my.id </small>
                 </td>
@@ -248,12 +281,16 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="global.js"></script>
+
 <script>
   renderNavigation('invoice-tagihan');
+  
   let allPelanggan = [];
   let internetTimeFetched = null;
   let idPelangganDipilih = ''; 
   let modalInvoiceInstance = null;
+  let baseNominalHarga = 0;
+  let statusSistemExpired = false;
 
   window.onload = function() {
     ambilWaktuInternetDanLoad();
@@ -265,7 +302,7 @@
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000);
+      const timeoutId = setTimeout(() => controller.abort(), 3000); 
       const response = await fetch('https://worldtimeapi.org/api/timezone/Asia/Jakarta', { signal: controller.signal });
       clearTimeout(timeoutId);
 
@@ -277,14 +314,19 @@
         }
       }
     } catch (error) {
-      console.warn("Gagal terhubung ke WorldTimeAPI, beralih menggunakan jam perangkat lokal.", error);
+      console.warn("Gagal terhubung ke WorldTimeAPI, beralih ke jam internal.", error);
     }
     
     internetTimeFetched = today;
     
-    callAPI('getPelangganData', null, function(data){
-      allPelanggan = data;
+    // FIX: Menggunakan arsitektur callAPI bawaan dari global.js untuk menarik data real pelanggan
+    callAPI('getPelangganData', null, function(data) {
+      allPelanggan = data || [];
       renderTagihanTable();
+    }, function(err) {
+      console.error(err);
+      const tbody = document.getElementById('tabelTagihanBody');
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger fw-bold">Gagal terhubung ke Database Google Sheets via Cloud API.</td></tr>';
     });
   }
 
@@ -302,10 +344,10 @@
     const today = internetTimeFetched ? new Date(internetTimeFetched.getTime()) : new Date();
     today.setHours(0,0,0,0); 
 
-    let periodeHasil = opsiBulan[today.getMonth()] + " " + today.getFullYear();
+    const periodeSekarangLive = opsiBulan[today.getMonth()] + " " + today.getFullYear();
 
     if (!expiredAtLama) {
-      return { periode: periodeHasil, statusBayar: "BELUM BAYAR" };
+      return { periode: periodeSekarangLive, statusBayar: "BELUM BAYAR", isExpiredTrue: true };
     }
 
     try {
@@ -316,11 +358,13 @@
       const diffTime = expDate.getTime() - today.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
+      let isExpiredTrue = (expDate.getTime() < today.getTime());
       let statusBayar = "SUDAH BAYAR";
       if (diffDays <= 5) { statusBayar = "BELUM BAYAR"; }
-      return { periode: periodeHasil, statusBayar: statusBayar };
+
+      return { periode: periodeSekarangLive, statusBayar: statusBayar, isExpiredTrue: isExpiredTrue };
     } catch(e) {
-      return { periode: periodeHasil, statusBayar: "BELUM BAYAR" };
+      return { periode: periodeSekarangLive, statusBayar: "BELUM BAYAR", isExpiredTrue: true };
     }
   }
 
@@ -328,7 +372,7 @@
     const tbody = document.getElementById('tabelTagihanBody');
     tbody.innerHTML = '';
 
-    if (allPelanggan.length === 0) {
+    if (!allPelanggan || allPelanggan.length === 0) {
       tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Tidak ada data pelanggan terdata.</td></tr>';
       return;
     }
@@ -370,55 +414,131 @@
     if(url) { window.open(url, '_blank'); } else { alert("Link invoice bermasalah."); }
   }
 
+  function generatePeriodeOptionsWithLock(expiredAtStr) {
+    const dropdown = document.getElementById('inputPeriodeTagihan');
+    dropdown.innerHTML = ''; 
+
+    const opsiBulan = ["JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"];
+    const today = internetTimeFetched ? new Date(internetTimeFetched.getTime()) : new Date();
+    
+    let limitMonth = today.getMonth();
+    let limitYear = today.getFullYear();
+
+    if (expiredAtStr) {
+      try {
+        const parts = String(expiredAtStr).split(' ')[0].split('/');
+        const expDate = new Date(parts[2], parts[1] - 1, parts[0]);
+        if (expDate.getTime() > today.getTime()) {
+          limitMonth = expDate.getMonth();
+          limitYear = expDate.getFullYear();
+        }
+      } catch(e) {
+        console.error(e);
+      }
+    }
+
+    let startCalcDate = new Date(today.getFullYear(), today.getMonth() - 2, 1);
+    let firstValidSelected = false;
+
+    for (let i = 0; i < 8; i++) {
+      let currentMonth = startCalcDate.getMonth();
+      let currentYear = startCalcDate.getFullYear();
+      let stringPeriode = opsiBulan[currentMonth] + " " + currentYear;
+      
+      let opt = document.createElement('option');
+      opt.value = stringPeriode;
+      opt.innerText = stringPeriode;
+
+      let targetBulanTimestamp = (currentYear * 12) + currentMonth;
+      let batasLunasTimestamp = (limitYear * 12) + limitMonth;
+
+      if (targetBulanTimestamp < batasLunasTimestamp) {
+        opt.disabled = true;
+        opt.style.color = "#dc3545";
+        opt.innerText += " (SUDAH DIBAYAR)";
+      } else {
+        if (!firstValidSelected) {
+          opt.selected = true;
+          firstValidSelected = true;
+        }
+      }
+      
+      dropdown.appendChild(opt);
+      startCalcDate.setMonth(startCalcDate.getMonth() + 1);
+    }
+  }
+
   function bukaPopUpModalInvoice(idPelanggan) {
     const p = allPelanggan.find(x => x.ID == idPelanggan);
     if (!p) return;
 
     idPelangganDipilih = idPelanggan;
     const kalkulasi = hitungKalkulasiTagihan(p.EXPIRED_AT);
+    statusSistemExpired = kalkulasi.isExpiredTrue; 
+
     const today = internetTimeFetched ? new Date(internetTimeFetched.getTime()) : new Date();
+    const formatTanggalDateInput = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     
-    const tglSekarang = today.getDate() + '/' + (today.getMonth()+1) + '/' + today.getFullYear();
-    
-    // ATURAN TERBARU: INV0000 + 4 ATAU 5 DIGIT ANGKA ACAK UNIK
-    const minAcak = 1000; 
-    const maxAcak = 99999;
-    const angkaAcak = Math.floor(Math.random() * (maxAcak - minAcak + 1)) + minAcak;
+    const angkaAcak = Math.floor(Math.random() * 90000) + 10000;
     const nomorInvoice = "INV0000" + angkaAcak;
 
-    const nominalHarga = Number(String(p.HARGA_PAKET).replace(/[^0-9]/g,''));
+    baseNominalHarga = Number(String(p.HARGA_PAKET).replace(/[^0-9]/g,''));
 
     document.getElementById('pdfIdpel').innerText = p.ID;
     document.getElementById('pdfNama').innerText = p.NAMA;
     document.getElementById('pdfAlamat').innerText = p.ALAMAT || '-';
     document.getElementById('pdfHp').innerText = p.NO_HP || '-';
     document.getElementById('pdfInvoice').innerText = nomorInvoice;
-    document.getElementById('pdfPeriode').innerText = kalkulasi.periode;
-    document.getElementById('pdfTanggal').innerText = tglSekarang;
-    
-    // DESKRIPSI ITEM DIUBAH MENJADI LAYANAN INTERNET - PAKET : [NAMA PAKET] SANGAT PERSIS
     document.getElementById('pdfDeskripsi').innerText = 'Layanan Internet - Paket : ' + (p.PAKET || '').toUpperCase();
+    document.getElementById('pdfHarga').innerText = 'Rp ' + baseNominalHarga.toLocaleString('id-ID');
+    document.getElementById('pdfSubtotal').innerText = 'Rp ' + baseNominalHarga.toLocaleString('id-ID');
+    document.getElementById('pdfSub').innerText = 'Rp ' + baseNominalHarga.toLocaleString('id-ID');
+
+    document.getElementById('inputTanggalBayar').value = formatTanggalDateInput;
+    generatePeriodeOptionsWithLock(p.EXPIRED_AT);
     
-    document.getElementById('pdfHarga').innerText = 'Rp ' + nominalHarga.toLocaleString('id-ID');
-    document.getElementById('pdfSubtotal').innerText = 'Rp ' + nominalHarga.toLocaleString('id-ID');
-    document.getElementById('pdfSub').innerText = 'Rp ' + nominalHarga.toLocaleString('id-ID');
-    document.getElementById('pdfGrand').innerText = 'Rp ' + nominalHarga.toLocaleString('id-ID');
+    document.getElementById('inputDiscount').value = "0";
+    document.getElementById('inputBiayaAdmin').value = "0";
+
+    updateLivePreviewInvoice();
 
     modalInvoiceInstance = new bootstrap.Modal(document.getElementById('modalInvoicePdf'));
     modalInvoiceInstance.show();
   }
 
+  function updateLivePreviewInvoice() {
+    const rawTglBayar = document.getElementById('inputTanggalBayar').value; 
+    const periode = document.getElementById('inputPeriodeTagihan').value;
+    const discount = Number(document.getElementById('inputDiscount').value) || 0;
+    const biayaAdmin = Number(document.getElementById('inputBiayaAdmin').value) || 0;
+
+    let tglBayarFormatCetak = '-';
+    if(rawTglBayar) {
+      const s = rawTglBayar.split('-');
+      tglBayarFormatCetak = `${s[2]}/${s[1]}/${s[0]}`;
+    }
+
+    const totalTagihan = baseNominalHarga - discount + biayaAdmin;
+
+    document.getElementById('pdfTanggal').innerText = tglBayarFormatCetak;
+    document.getElementById('pdfPeriode').innerText = periode || '-';
+    document.getElementById('pdfDiskon').innerText = 'Rp ' + discount.toLocaleString('id-ID');
+    document.getElementById('pdfAdmin').innerText = 'Rp ' + biayaAdmin.toLocaleString('id-ID');
+    document.getElementById('pdfGrand').innerText = 'Rp ' + totalTagihan.toLocaleString('id-ID');
+  }
+
+  // FIX: Menggunakan callAPI global.js untuk aksi "simpanInvoice" ke Google Apps Script backend
   function prosesSimpanInvoiceSesuaiPreviewHtml() {
     const p = allPelanggan.find(x => x.ID == idPelangganDipilih);
     if (!p) return;
 
     const btnProses = document.getElementById('btnSimpanInvoiceFinal');
     btnProses.disabled = true;
-    btnProses.innerText = "⏳ Saving...";
+    btnProses.innerText = "⏳ Saving to Cloud...";
 
     const nomorInvoice = document.getElementById('pdfInvoice').innerText;
-
     const element = document.getElementById('invoicePdfArea');
+
     const opt = { 
       margin: 0, 
       filename: nomorInvoice + '.pdf', 
@@ -439,46 +559,49 @@
             tanggal: document.getElementById('pdfTanggal').innerText,
             id: document.getElementById('pdfIdpel').innerText,
             nama: document.getElementById('pdfNama').innerText,
-            periode: document.getElementById('pdfPeriode').innerText,
+            periode: document.getElementById('inputPeriodeTagihan').value,
             paket: document.getElementById('pdfDeskripsi').innerText,
             tagihan: document.getElementById('pdfGrand').innerText,
-            base64: base64DataRaw
+            base64: base64DataRaw,
+            isExpired: statusSistemExpired
           };
 
-          google.script.run
-            .withSuccessHandler(function(urlDrivePdf){
-              alert('Invoice berhasil disimpan');
-              
-              p.SUDAH_DIBAYAR_SEKARANG = true;
-              p.URL_PDF_GENERATED = urlDrivePdf;
-
-              html2pdf().set(opt).from(element).save();
-              window.open(urlDrivePdf, '_blank');
-
-              if(modalInvoiceInstance){
-                modalInvoiceInstance.hide();
-                modalInvoiceInstance = null;
-              }
-              document.querySelectorAll('.modal-backdrop').forEach(e => e.remove());
-              document.body.classList.remove('modal-open');
-              
-              renderTagihanTable();
-            })
-            .withFailureHandler(function(err){
-              console.error(err);
-              alert('Gagal simpan invoice');
-              btnProses.disabled = false;
-              btnProses.innerText = "Download PDF";
-            })
-            .simpanInvoice(dataKirimBackend);
+          // Memanggil API Cloud Apps Script secara sinkron lewat global.js milikmu
+          callAPI('simpanInvoice', dataKirimBackend, function(urlDrivePdf) {
+            alert('Invoice berhasil dikirim & disimpan ke Google Drive!');
+            p.SUDAH_DIBAYAR_SEKARANG = true;
+            p.URL_PDF_GENERATED = urlDrivePdf;
+            
+            html2pdf().set(opt).from(element).save(); // Download offline browser klien
+            if(urlDrivePdf && urlDrivePdf !== "#") { window.open(urlDrivePdf, '_blank'); }
+            
+            bersihkanModal();
+          }, function(errMessage) {
+            alert('Gagal memproses Cloud: ' + errMessage);
+            resetTombolSelesai(btnProses);
+          });
         };
       });
     } catch(err) {
       console.error(err);
       alert('Gagal generate PDF');
-      btnProses.disabled = false;
-      btnProses.innerText = "Download PDF";
+      resetTombolSelesai(btnProses);
     }
+  }
+
+  function bersihkanModal() {
+    if(modalInvoiceInstance){
+      modalInvoiceInstance.hide();
+      modalInvoiceInstance = null;
+    }
+    document.querySelectorAll('.modal-backdrop').forEach(e => e.remove());
+    document.body.classList.remove('modal-open');
+    renderTagihanTable();
+  }
+
+  function resetTombolSelesai(btn) {
+    btn.disabled = false;
+    btn.innerText = "Download PDF";
   }
 </script>
 </body>
