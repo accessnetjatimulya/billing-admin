@@ -19,7 +19,7 @@
     .table td { vertical-align: middle; }
     .badge-status { font-weight: bold; padding: 6px 12px; border-radius: 6px; }
 
-    /* PDF PREVIEW RESPONSIVE CONTAINER (PERSIS 100% PREVIEW.HTML) */
+    /* CONTAINER RESPONSIVE UNTUK PRATINJAU PREVIEW KERTAS */
     .pdf-scroll-container {
       overflow-x: auto;
       width: 100%;
@@ -95,7 +95,7 @@
             <table style="width:100%; border-collapse:collapse;">
               <tr>
                 <td style="width:45%; vertical-align:top;">
-                  <img id="logoAccessnet" style="width:240px; display:block;">
+                  <img id="logoAccessnet" src="https://drive.google.com/thumbnail?id=1rhcXNzvzkK9p7gaFB6W3HQOPyR_mgooe" style="width:240px; display:block;" crossorigin="anonymous">
                 </td>
                 <td style="text-align:right; font-size:12px; line-height:1.4;">
                   <div style="font-size:20px; font-weight:bold;">TEKNOLOGI JATIMULYA - ACCESSNET</div>
@@ -210,9 +210,9 @@
                   <b>Rekening : 901719800584</b><br>Atas Nama : A. YANI
                 </td>
                 <td rowspan="3" style="width: 50%; padding: 20px; text-align: center; vertical-align: middle; border-left: 2px solid #ddd;">
-                  <img id="qrisAccessnet" src="" style="width: 225px; max-width: 100%; margin-bottom: 10px; border-radius: 6px;"><br>
+                  <img id="qrisAccessnet" src="https://drive.google.com/thumbnail?id=1xEiSuIVuzu379VLMsOIK3X6xs0QmDdRA" style="width: 225px; max-width: 100%; margin-bottom: 10px; border-radius: 6px;" crossorigin="anonymous"><br>
                   <span style="font-size: 18px; color: #111;">QRIS Pembayaran</span><br>
-                  <small style="font-weight: bold; color: #000;">Atas Nama : ACCESSNET JATIMULYA<br>Link Konfirmasi Pembayaran :<br> https://s.id/bayar-accessnet </small>
+                  <small style="font-weight: bold; color: #000;">Atas Nama : ACCESSNET JATIMULYA<br>Link Konfirmasi Pembayaran :<br> https://billing.accessnet.my.id </small>
                 </td>
               </tr>
               <tr>
@@ -256,26 +256,8 @@
   let modalInvoiceInstance = null;
 
   window.onload = function() {
-    ambilAsetGambarBase64();
     ambilWaktuInternetDanLoad();
   };
-
-  // AMBIL BASE64 DRIVEN ASET LOGO DAN QRIS LEWAT SCRIPT RUN (PERSIS PREVIEW.HTML)
-  function ambilAsetGambarBase64() {
-    try {
-      google.script.run
-        .withSuccessHandler(function(base64){
-          document.getElementById('logoAccessnet').src = base64;
-        })
-        .getLogoBase64();
-        
-      google.script.run
-        .withSuccessHandler(function(base64){
-          document.getElementById('qrisAccessnet').src = base64;
-        })
-        .getQrisBase64();
-    } catch(e) { console.error("Gagal terhubung dengan objek google.script.run", e); }
-  }
 
   async function ambilWaktuInternetDanLoad(){
     let today = new Date();
@@ -388,7 +370,6 @@
     if(url) { window.open(url, '_blank'); } else { alert("Link invoice bermasalah."); }
   }
 
-  // PANGGIL MODAL POP UP PREVIEW 100% SEPERTI STRUKTUR PREVIEW.HTML
   function bukaPopUpModalInvoice(idPelanggan) {
     const p = allPelanggan.find(x => x.ID == idPelanggan);
     if (!p) return;
@@ -398,10 +379,15 @@
     const today = internetTimeFetched ? new Date(internetTimeFetched.getTime()) : new Date();
     
     const tglSekarang = today.getDate() + '/' + (today.getMonth()+1) + '/' + today.getFullYear();
-    const nomorInvoice = "INV-" + today.getFullYear() + String(today.getMonth()+1).padStart(2,'0') + String(today.getDate()).padStart(2,'0') + "-" + p.ID;
+    
+    // ATURAN TERBARU: INV0000 + 4 ATAU 5 DIGIT ANGKA ACAK UNIK
+    const minAcak = 1000; 
+    const maxAcak = 99999;
+    const angkaAcak = Math.floor(Math.random() * (maxAcak - minAcak + 1)) + minAcak;
+    const nomorInvoice = "INV0000" + angkaAcak;
+
     const nominalHarga = Number(String(p.HARGA_PAKET).replace(/[^0-9]/g,''));
 
-    // Injeksi Isian Data ke dalam Visual Kertas Invoice A4 di Kanan Modal
     document.getElementById('pdfIdpel').innerText = p.ID;
     document.getElementById('pdfNama').innerText = p.NAMA;
     document.getElementById('pdfAlamat').innerText = p.ALAMAT || '-';
@@ -410,9 +396,10 @@
     document.getElementById('pdfPeriode').innerText = kalkulasi.periode;
     document.getElementById('pdfTanggal').innerText = tglSekarang;
     
-    document.getElementById('pdfDeskripsi').innerText = 'PAKET DATA INTERNET ' + (p.PAKET || '').toUpperCase();
-    document.getElementById('pdfHarga').innerText = 'Rp ' + nominalHarga.toLocaleString('id-ID');
+    // DESKRIPSI ITEM DIUBAH MENJADI LAYANAN INTERNET - PAKET : [NAMA PAKET] SANGAT PERSIS
+    document.getElementById('pdfDeskripsi').innerText = 'Layanan Internet - Paket : ' + (p.PAKET || '').toUpperCase();
     
+    document.getElementById('pdfHarga').innerText = 'Rp ' + nominalHarga.toLocaleString('id-ID');
     document.getElementById('pdfSubtotal').innerText = 'Rp ' + nominalHarga.toLocaleString('id-ID');
     document.getElementById('pdfSub').innerText = 'Rp ' + nominalHarga.toLocaleString('id-ID');
     document.getElementById('pdfGrand').innerText = 'Rp ' + nominalHarga.toLocaleString('id-ID');
@@ -421,7 +408,6 @@
     modalInvoiceInstance.show();
   }
 
-  // LOGIC SINKRONISASI DAN DOWNLOAD UTAMA (MENGGUNAKAN SCRIPT RUN SIMPANINVOICE PERSIS PREVIEW.HTML)
   function prosesSimpanInvoiceSesuaiPreviewHtml() {
     const p = allPelanggan.find(x => x.ID == idPelangganDipilih);
     if (!p) return;
@@ -430,26 +416,14 @@
     btnProses.disabled = true;
     btnProses.innerText = "⏳ Saving...";
 
-    const today = internetTimeFetched ? new Date(internetTimeFetched.getTime()) : new Date();
     const nomorInvoice = document.getElementById('pdfInvoice').innerText;
-    const nominalHarga = Number(String(p.HARGA_PAKET).replace(/[^0-9]/g,''));
-
-    let isPelangganExpired = false;
-    if (p.EXPIRED_AT) {
-      const parts = String(p.EXPIRED_AT).split(' ')[0].split('/');
-      const expDate = new Date(parts[2], parts[1] - 1, parts[0]);
-      expDate.setHours(0,0,0,0);
-      if (expDate < today) { isPelangganExpired = true; }
-    } else {
-      isPelangganExpired = true; 
-    }
 
     const element = document.getElementById('invoicePdfArea');
     const opt = { 
       margin: 0, 
       filename: nomorInvoice + '.pdf', 
       image: { type: 'jpeg', quality: 1 },
-      html2canvas: { scale: 2 }, 
+      html2canvas: { scale: 2, useCORS: true }, 
       jsPDF: { format: [794, 1123], unit: 'px', orientation: 'portrait' } 
     };
     
@@ -460,7 +434,6 @@
         reader.onloadend = function(){
           const base64DataRaw = reader.result.split(',')[1];
           
-          // Mempersiapkan payload pengiriman data (Persis 100% parameters preview.html)
           const dataKirimBackend = {
             noInvoice: nomorInvoice,
             tanggal: document.getElementById('pdfTanggal').innerText,
@@ -469,11 +442,9 @@
             periode: document.getElementById('pdfPeriode').innerText,
             paket: document.getElementById('pdfDeskripsi').innerText,
             tagihan: document.getElementById('pdfGrand').innerText,
-            base64: base64DataRaw,
-            isExpired: isPelangganExpired
+            base64: base64DataRaw
           };
 
-          // Pemanggilan fungsi simpanInvoice via google.script.run (Sesuai 100% instruksi preview.html)
           google.script.run
             .withSuccessHandler(function(urlDrivePdf){
               alert('Invoice berhasil disimpan');
@@ -481,11 +452,9 @@
               p.SUDAH_DIBAYAR_SEKARANG = true;
               p.URL_PDF_GENERATED = urlDrivePdf;
 
-              // Download lokal & Buka Tab Baru Virtual Drive (Persis Alur Preview.html)
               html2pdf().set(opt).from(element).save();
               window.open(urlDrivePdf, '_blank');
 
-              // Hilangkan Modal Backdrop Sesuai Alur Di Preview.html
               if(modalInvoiceInstance){
                 modalInvoiceInstance.hide();
                 modalInvoiceInstance = null;
