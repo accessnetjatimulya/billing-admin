@@ -223,7 +223,7 @@
                     <td style="padding:15px 10px; text-align:center; font-weight:bold;">1</td>
                     <td id="pdfDeskripsi" style="padding:15px 10px; font-weight:bold;"></td>
                     <td id="pdfHarga" style="padding:15px 10px; text-align:right; font-weight:bold;"></td>
-                    <td style="padding:15px 10px; text-align:center; font-weight:bold;">1</td>
+                    <td id="pdfQtyRow" style="padding:15px 10px; text-align:center; font-weight:bold;">1</td>
                     <td id="pdfSubtotal" style="padding:15px 10px; text-align:right; font-weight:bold;"></td>
                   </tr>
                   
@@ -570,6 +570,7 @@
     const totalTagihan = subTotalDinamis - discount + biayaAdmin;
 
     document.getElementById('pdfHarga').innerText = 'Rp ' + baseNominalHarga.toLocaleString('id-ID');
+    document.getElementById('pdfQtyRow').innerText = jumlahLompatBulanTerpilih;
     document.getElementById('pdfSubtotal').innerText = 'Rp ' + subTotalDinamis.toLocaleString('id-ID');
     document.getElementById('pdfSub').innerText = 'Rp ' + subTotalDinamis.toLocaleString('id-ID');
 
@@ -588,7 +589,24 @@
     btnProses.disabled = true;
     btnProses.innerText = "⏳ Memproses...";
 
-    const element = document.getElementById('invoicePdfArea');
+    // === SOLUSI STABIL: TEKNIK KLONING MEMORI LATAR BELAKANG ===
+    const originalElement = document.getElementById('invoicePdfArea');
+    const workerWrapper = document.createElement('div');
+    
+    workerWrapper.style.position = 'absolute';
+    workerWrapper.style.top = '-9999px';
+    workerWrapper.style.left = '-9999px';
+    workerWrapper.style.width = '794px';
+    workerWrapper.style.height = '1123px';
+    workerWrapper.style.background = '#fff';
+    
+    const clonedElement = originalElement.cloneNode(true);
+    clonedElement.style.transform = 'none';
+    clonedElement.style.margin = '0px';
+    clonedElement.style.position = 'static';
+    
+    workerWrapper.appendChild(clonedElement);
+    document.body.appendChild(workerWrapper);
 
     const opt = {
       margin:       0,
@@ -598,29 +616,16 @@
         scale: 2, 
         useCORS: true, 
         logging: false,
-        letterRendering: true
+        letterRendering: true,
+        scrollY: 0,
+        scrollX: 0
       },
       jsPDF:        { unit: 'px', format: [794, 1123], orientation: 'portrait' }
     };
 
-    const originalTransform = element.style.transform;
-    const originalMargin = element.style.marginBottom;
-    const originalPosition = element.style.position;
-    const originalLeft = element.style.left;
-
-    element.style.transform = 'none';
-    element.style.marginBottom = '0px';
-    element.style.position = 'static';
-    element.style.left = '0px';
-
     setTimeout(() => {
-      html2pdf().set(opt).from(element).toPdf().get('pdf').then(function (pdf) {
+      html2pdf().set(opt).from(clonedElement).toPdf().get('pdf').then(function (pdf) {
         
-        element.style.transform = originalTransform;
-        element.style.marginBottom = originalMargin;
-        element.style.position = originalPosition;
-        element.style.left = originalLeft;
-
         const base64DataRaw = pdf.output('datauristring').split(',')[1];
 
         const dataKirimBackend = {
@@ -641,26 +646,26 @@
           p.SUDAH_DIBAYAR_SEKARANG = true;
           p.URL_PDF_GENERATED = urlDrivePdf;
           
-          html2pdf().set(opt).from(element).save(); 
+          html2pdf().set(opt).from(clonedElement).save(); 
+          
+          document.body.removeChild(workerWrapper);
           
           if(urlDrivePdf && urlDrivePdf !== "#") { window.open(urlDrivePdf, '_blank'); }
           
           bersihkanModal();
         }, function(errMessage) {
           alert('Gagal memproses Cloud: ' + errMessage);
+          document.body.removeChild(workerWrapper);
           resetTombolSelesai(btnProses);
         });
 
       }).catch(err => {
-        element.style.transform = originalTransform;
-        element.style.marginBottom = originalMargin;
-        element.style.position = originalPosition;
-        element.style.left = originalLeft;
+        document.body.removeChild(workerWrapper);
         console.error(err);
         alert('Gagal generate PDF');
         resetTombolSelesai(btnProses);
       });
-    }, 250);
+    }, 300);
   }
 
   function bersihkanModal() {
@@ -675,7 +680,7 @@
 
   function resetTombolSelesai(btn) {
     btn.disabled = false;
-    btn.innerText = "Download PDF";
+    btn.innerText = "Perpanjang";
   }
 </script>
 </body>
