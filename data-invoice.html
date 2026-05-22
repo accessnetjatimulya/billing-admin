@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Data Invoice - ACCESSNET</title>
+  <title>Data Invoice Tersimpan - ACCESSNET</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body{ margin:0; background:#f4f7f6; font-family:Arial,sans-serif; }
@@ -27,7 +27,7 @@
 <div class="main-content">
   <div class="card p-3 p-md-4">
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-      <h3 class="mb-0 fs-4 fs-md-3">Data Invoice</h3>
+      <h3 class="mb-0 fs-4 fs-md-3">Data Invoice Tersimpan</h3>
       <input type="text" id="searchInvoice" class="form-control w-100 w-md-auto" placeholder="Cari Invoice / Nama / ID" style="max-width:350px" onkeyup="filterInvoice()">
     </div>
 
@@ -47,7 +47,7 @@
           </tr>
         </thead>
         <tbody id="tabelInvoiceBody">
-          <tr><td colspan="9" class="text-center">Memuat data invoice...</td></tr>
+          <tr><td colspan="9" class="text-center">Memuat data invoice tersimpan...</td></tr>
         </tbody>
       </table>
     </div>
@@ -56,15 +56,19 @@
 
 <script src="global.js"></script>
 <script>
+if(checkLogin()){
   renderNavigation('data-invoice');
+}
+</script>
 
+<script>
   window.onload = function(){ loadDataInvoice(); };
-
+  	
   function loadDataInvoice(){
     const tbody = document.getElementById("tabelInvoiceBody");
     callAPI('getDataInvoice', null, function(data){
       if(!data || data.length === 0){
-        tbody.innerHTML = '<tr><td colspan="9" class="text-center">Tidak ada data invoice</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center">Tidak ada data invoice tersimpan</td></tr>';
         return;
       }
       let html = '';
@@ -75,7 +79,7 @@
             <td>${inv.TANGGAL}</td>
             <td>${inv.ID}</td>
             <td>${inv.NAMA}</td>
-            <td>${inv.PERIODE}</td>
+            <td>${formatPeriode(inv.PERIODE)}</td>
             <td>${inv.PAKET}</td>
             <td>Rp. ${Number(inv.TAGIHAN).toLocaleString('id-ID')}</td>
             <td>${inv.PDF ? `<a href="${inv.PDF}" target="_blank" class="btn btn-sm btn-danger">PDF</a>` : '-'}</td>
@@ -86,6 +90,26 @@
     });
   }
 
+  function formatPeriode(periode){
+	  if(!periode) return '-';
+	  const bulan = [
+		'JANUARI',
+		'FEBRUARI',
+		'MARET',
+		'APRIL',
+		'MEI',
+		'JUNI',
+		'JULI',
+		'AGUSTUS',
+		'SEPTEMBER',
+		'OKTOBER',
+		'NOVEMBER',
+		'DESEMBER'
+	  ];
+	  const tgl = new Date(periode);
+	  return bulan[tgl.getMonth()] + ' ' + tgl.getFullYear();
+	}
+
   function filterInvoice(){
     const keyword = document.getElementById('searchInvoice').value.toLowerCase();
     document.querySelectorAll('#tabelInvoiceBody tr').forEach(row => {
@@ -94,10 +118,27 @@
   }
 
   function hapusInvoice(noInvoice){
-    if(confirm('Yakin ingin menghapus invoice ini?')) {
-      callAPI('deleteInvoice', noInvoice, () => loadDataInvoice());
-    }
-  }
+
+	  if(confirm('Yakin ingin menghapus invoice ini?')) {
+
+		callAPI('deleteInvoice', noInvoice, function(res){
+
+		  alert('Data invoice berhasil dihapus');
+
+		  loadDataInvoice();
+
+		}, function(err){
+
+		  alert('Gagal menghapus invoice');
+
+		  console.error(err);
+
+		});
+
+	  }
+
+	}
 </script>
+
 </body>
 </html>

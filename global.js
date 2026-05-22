@@ -1,7 +1,7 @@
 // ==========================================
 // CONFIG: PASTE URL WEB APP APPS SCRIPT DI SINI
 // ==========================================
-const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbwHgo-Yp-jjbk14uHS5gAYuzbuBoPSCbA9WvgK8FKZm1Gfj_2gScLbp3vAxGrIFm_4G/exec";
+const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzgg13uCrCLae6JzPxDNcNaXx-Ul7Gs4xf_Q6b3AeoNNK01Ded1KLnT3-Xoa1iSNuus/exec";
 
 // Fungsi Global Jembatan API
 function callAPI(action, data, onSuccess, onFailure) {
@@ -43,7 +43,8 @@ function renderNavigation(activeMenu) {
       <a href="index.html" class="btn btn-sidebar ${activeMenu === 'dashboard' ? 'active' : ''}">📊 Dashboard</a>
       <a href="pelanggan.html" class="btn btn-sidebar ${activeMenu === 'pelanggan' ? 'active' : ''}">👥 Data Pelanggan</a>
       <a href="invoice-tagihan.html" class="btn btn-sidebar ${activeMenu === 'invoice-tagihan' ? 'active' : ''}">🧾 Invoice Tagihan</a>
-      <a href="data-invoice.html" class="btn btn-sidebar ${activeMenu === 'data-invoice' ? 'active' : ''}">📁 Data Invoice</a>
+      <a href="data-invoice.html" class="btn btn-sidebar ${activeMenu === 'data-invoice' ? 'active' : ''}">📁 Data Invoice Tersimpan</a>
+	  <button onclick="logoutAccessnet()" class="btn btn-sidebar text-danger">🚪 Logout</button>
     </div>
   `;
 
@@ -53,4 +54,36 @@ function renderNavigation(activeMenu) {
 
 function toggleSidebar() {
   document.getElementById('sidebarMenu').classList.toggle('show');
+}
+
+// ==========================================
+// SESSION LOGIN ACCESSNET
+// ==========================================
+
+function checkLogin() {
+
+  const session = localStorage.getItem('ACCESSNET_LOGIN');
+  const currentPage = window.location.pathname.split("/").pop() || 'index.html';
+
+  if(currentPage === 'login.html'){
+
+    if(session === 'LOGIN_OK'){
+      window.location.replace('index.html');
+      return false;
+    }
+
+    return true;
+  }
+
+  if(session !== 'LOGIN_OK'){
+    window.location.replace('login.html');
+    return false;
+  }
+
+  return true;
+}
+
+function logoutAccessnet() {
+  localStorage.removeItem('ACCESSNET_LOGIN');
+  window.location.replace('login.html');
 }
