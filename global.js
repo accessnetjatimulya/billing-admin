@@ -1,7 +1,7 @@
 // ==========================================
 // CONFIG: PASTE URL WEB APP APPS SCRIPT DI SINI
 // ==========================================
-const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbxkr1OFU3XgN2wLwwbrty6uFndNAuunY-bnuZc1wR6CsoUz3oIT1zumkT4V5nOdVDEQ/exec";
+const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzFfLWTjCSbXQDkjRwjirDamOT9a_hH-M0Br-LThNhseb-msgcbGOgcBRdLVfjyTQs/exec";
 
 // Fungsi Global Jembatan API
 function callAPI(action, data, onSuccess, onFailure) {
@@ -31,17 +31,20 @@ function callAPI(action, data, onSuccess, onFailure) {
 function renderNavigation(activeMenu) {
   const topbarHtml = `
     <div class="mobile-topbar">
-      <h5 class="mb-0">ACCESSNET</h5>
+      <img src="logo-accessnet.png" alt="ACCESSNET Logo" style="height: 32px; object-fit: contain;">
       <button class="btn btn-outline-light btn-sm" type="button" onclick="toggleSidebar()">☰ Menu</button>
     </div>
   `;
 
   const sidebarHtml = `
     <div class="sidebar" id="sidebarMenu">
-      <h4 class="text-center mb-4 d-none d-lg-block">ACCESSNET</h4>
+      <div class="text-center mb-4 d-none d-lg-block">
+        <img src="logo-accessnet.png" alt="ACCESSNET Logo" style="max-width: 80%; height: auto;">
+      </div>
       <hr class="text-white d-none d-lg-block">
       <a href="index.html" class="btn btn-sidebar ${activeMenu === 'dashboard' ? 'active' : ''}">📊 Dashboard</a>
       <a href="pelanggan.html" class="btn btn-sidebar ${activeMenu === 'pelanggan' ? 'active' : ''}">👥 Data Pelanggan</a>
+	  <a href="paketinternet.html" class="btn btn-sidebar ${activeMenu === 'paket-internet' ? 'active' : ''}">📦 Paket Internet</a>
       <a href="invoice-tagihan.html" class="btn btn-sidebar ${activeMenu === 'invoice-tagihan' ? 'active' : ''}">🧾 Invoice Tagihan</a>
       <a href="data-invoice.html" class="btn btn-sidebar ${activeMenu === 'data-invoice' ? 'active' : ''}">📁 Data Invoice Tersimpan</a>
 	  <button onclick="logoutAccessnet()" class="btn btn-sidebar text-danger">🚪 Logout</button>

@@ -47,7 +47,11 @@
           </tr>
         </thead>
         <tbody id="tabelInvoiceBody">
-          <tr><td colspan="9" class="text-center">Memuat data invoice tersimpan...</td></tr>
+          <tr>
+            <td colspan="9" class="text-center py-4">
+              <div class="spinner-border spinner-border-sm text-primary" role="status"></div> Memuat data invoice tersimpan...
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -66,6 +70,10 @@ if(checkLogin()){
   	
   function loadDataInvoice(){
     const tbody = document.getElementById("tabelInvoiceBody");
+    if (tbody) {
+      tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary" role="status"></div> Memuat data invoice tersimpan...</td></tr>';
+    }
+
     callAPI('getDataInvoice', null, function(data){
       if(!data || data.length === 0){
         tbody.innerHTML = '<tr><td colspan="9" class="text-center">Tidak ada data invoice tersimpan</td></tr>';
@@ -111,9 +119,13 @@ if(checkLogin()){
 	}
 
   function filterInvoice(){
-    const keyword = document.getElementById('searchInvoice').value.toLowerCase();
-    document.querySelectorAll('#tabelInvoiceBody tr').forEach(row => {
-      row.style.display = row.innerText.toLowerCase().includes(keyword) ? '' : 'none';
+    const keyword = document.getElementById('searchInvoice').value.toLowerCase().trim();
+    const rows = document.querySelectorAll('#tabelInvoiceBody tr');
+    
+    rows.forEach(row => {
+      // Menggunakan textContent jauh lebih ringan dibanding innerText
+      const text = row.textContent.toLowerCase(); 
+      row.style.display = text.includes(keyword) ? '' : 'none';
     });
   }
 

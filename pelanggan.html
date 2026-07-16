@@ -41,6 +41,12 @@
       </div>
     </div>
 
+	<div class="mb-2">
+	  <small class="text-dark d-block fw-bold" style="font-size: 0.85rem; font-style: italic; line-height: 1.4;">
+		*PENTING : Tunggu Data Muncul terlebih dahulu utuk tambah Pelanggan Baru, Pergi ke Invoice Tagihan untuk UP Pelanggan baru agar setatusnya AKTIF/SUDAH BAYAR.
+	  </small>
+	</div>
+
     <input type="text" id="searchPelanggan" class="form-control mb-3" placeholder="Cari Nama / ID" onkeyup="filterPelanggan()">
 
     <div class="table-responsive">
@@ -76,9 +82,8 @@
         <form id="formPelanggan">
           <div class="row">
             <div class="col-md-6 mb-2">
-              <label class="form-label">ID</label>
-              <input type="text" id="f_id" class="form-control" required oninput="cekIdPelanggan()">
-              <small id="idError" style="color:red; display:none;">ID sudah digunakan</small>
+              <label class="form-label">ID Pelanggan (Otomatis)</label>
+              <input type="text" id="f_id" class="form-control" style="background-color: #e9ecef;" readonly required>
             </div>
             <div class="col-md-6 mb-2">
               <label class="form-label">Nama</label>
@@ -190,7 +195,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-        <button type="button" class="btn btn-primary" onclick="simpanData()">Simpan</button>
+        <button type="button" class="btn btn-primary" id="btnSimpan" onclick="simpanData()">Simpan</button>
       </div>
     </div>
   </div>
@@ -216,6 +221,11 @@ if(checkLogin()){
   };
 
   function loadDataPelanggan(){
+    var tbody = document.getElementById('tabelPelangganBody');
+    if (tbody) {
+      tbody.innerHTML = '<tr><td colspan="10" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary" role="status"></div> Memuat data pelanggan...</td></tr>';
+    }
+
     callAPI('getPelangganData', null, function(data){
       allPelanggan = data;
       renderTable(data);
@@ -227,7 +237,7 @@ if(checkLogin()){
     const tbody = document.getElementById('tabelPelangganBody');
     tbody.innerHTML = '';
     if(data.length == 0){
-      tbody.innerHTML = '<tr><td colspan="8" class="text-center">Data kosong</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center">⚠️ Data Tidak Ditemukan / Data Kosong</td></tr>';
       return;
     }
     data.forEach(function(p){
@@ -305,67 +315,91 @@ if(checkLogin()){
     }));
   }
 
+  function getNextId() {
+    if (!allPelanggan || allPelanggan.length === 0) {
+      return 1;
+    }
+    
+    let maxId = 0;
+    allPelanggan.forEach(function(p) {
+      let idNum = parseInt(p.ID, 10);
+      if (!isNaN(idNum) && idNum > maxId) {
+        maxId = idNum;
+      }
+    });
+    
+    return maxId + 1;
+  }
+
   function openModal(){
     editMode = false; currentEditId = '';
     document.getElementById('modalTitle').innerText = 'Tambah Pelanggan';
     document.getElementById('formPelanggan').reset();
+    
+    // ID didapatkan otomatis & kolom dikunci (readonly)
+    document.getElementById('f_id').value = getNextId();
+    
     loadPaketByTipe();
     new bootstrap.Modal(document.getElementById('modalPelanggan')).show();
   }
 
-  // FUNGSI LOAD PAKET INTERNET TERBARU YANG LENGKAP
   function loadPaketByTipe(){
-    const tipe = document.getElementById('f_tipe').value;
-    const select = document.getElementById('f_paket');
+    var tipe = document.getElementById('f_tipe').value;
+    var select = document.getElementById('f_paket');
     
-    if(tipe == 'PPP'){
-      select.innerHTML = `
-        <option value="">-- Pilih Paket --</option>
-        <option value="ACCESSNet" data-harga="0">ACCESSNet</option>
-        <option value="BATAS" data-harga="0">BATAS</option>
-		 <option value="200Mb" data-harga="2000000">200Mb</option>
-        <option value="200Mb" data-harga="1100000">100Mb</option>
-        <option value="PP-50M" data-harga="650000">PP-50M</option>
-        <option value="PP-30M" data-harga="330000">PP-30M</option>
-        <option value="PP-20M" data-harga="300000">PP-20M-L</option>
-		<option value="PP-20M" data-harga="250000">PP-20M</option>
-        <option value="PP-15M" data-harga="185000">PP-15M</option>
-        <option value="PP-12M" data-harga="165000">PP-12M</option>
-        <option value="PP-8M" data-harga="145000">PP-8M</option>
-        <option value="PP-7M" data-harga="130000">PP-7M</option>
-        <option value="PP-5M" data-harga="110000">PP-5M</option>
-        <option value="PP-STB" data-harga="185000">PP-STB</option>
-        <option value="PP-1Hp" data-harga="50000">PP-1Hp</option>
-        <option value="PP-2Hp" data-harga="80000">PP-2Hp</option>
-      `;
-    }
-    else if(tipe == 'HOTSPOT'){
-      select.innerHTML = `
-        <option value="">-- Pilih Paket --</option>
-        <option value="Hs-1hp" data-harga="50000">Hs-1hp</option>
-        <option value="Hs-2hp" data-harga="80000">Hs-2hp</option>
-        <option value="Keluarga" data-harga="0">Keluarga</option>
-      `;
-    }
+    select.innerHTML = '<option value="">-- Memuat Paket... --</option>';
+    
+    callAPI('getPaket', null, function(data) {
+      select.innerHTML = '<option value="">-- Pilih Paket --</option>';
+      if (data && data.length > 0) {
+        var paketDisaring = data.filter(function(p) {
+          return String(p.TIPE).toUpperCase() === tipe.toUpperCase();
+        });
+        
+        paketDisaring.forEach(function(p) {
+          var option = document.createElement('option');
+          option.value = p.NAMA;
+          option.text = p.NAMA;
+          option.setAttribute('data-harga', p.HARGA);
+          select.appendChild(option);
+        });
+        
+        if (editMode) {
+          var p = allPelanggan.find(function(x) { return x.ID == currentEditId; });
+          if (p) {
+            select.value = p.PAKET;
+            if (select.selectedIndex === -1) {
+              select.value = "";
+            }
+          }
+        }
+      }
+      pilihPaket();
+    }, function(err) {
+      select.innerHTML = '<option value="">-- Gagal memuat paket --</option>';
+      console.error(err);
+    });
   }
 
   function pilihPaket(){
-    const s = document.getElementById('f_paket');
-    const h = s.options[s.selectedIndex].getAttribute('data-harga');
-    document.getElementById('f_harga').value = h ? 'Rp ' + parseInt(h).toLocaleString('id-ID') : '';
-  }
-
-  function cekIdPelanggan(){
-    const input = document.getElementById('f_id');
-    const err = document.getElementById('idError');
-    const duplicate = allPelanggan.some(p => (!editMode || p.ID != currentEditId) && p.ID.toString().toLowerCase() == input.value.trim().toLowerCase());
-    input.classList.toggle('is-invalid', duplicate);
-    err.style.display = duplicate ? 'block' : 'none';
-    return duplicate;
+    var s = document.getElementById('f_paket');
+    var selectedOption = s.options[s.selectedIndex];
+    
+    if (selectedOption && selectedOption.value !== "") {
+      var h = selectedOption.getAttribute('data-harga');
+      document.getElementById('f_harga').value = h ? 'Rp ' + parseInt(h).toLocaleString('id-ID') : '';
+    } else {
+      document.getElementById('f_harga').value = '';
+    }
   }
 
   function simpanData(){
-    if(cekIdPelanggan()) return;
+    const btnSimpan = document.getElementById('btnSimpan');
+    if(btnSimpan) {
+      btnSimpan.disabled = true;
+      btnSimpan.innerText = 'Menyimpan...';
+    }
+
     const formData = {
       ID: document.getElementById('f_id').value,
       NAMA: document.getElementById('f_nama').value,
@@ -377,10 +411,24 @@ if(checkLogin()){
       EXPIRED_AT: document.getElementById('f_expired').value,
       UPDATED_AT: document.getElementById('f_updated').value
     };
+
     callAPI('savePelanggan', formData, function(res){
       alert(res);
+      
+      if(btnSimpan) {
+        btnSimpan.disabled = false;
+        btnSimpan.innerText = 'Simpan';
+      }
+      
       bootstrap.Modal.getInstance(document.getElementById('modalPelanggan')).hide();
       loadDataPelanggan();
+    }, function(err){
+      alert('Gagal menyimpan pelanggan: ' + err);
+      
+      if(btnSimpan) {
+        btnSimpan.disabled = false;
+        btnSimpan.innerText = 'Simpan';
+      }
     });
   }
 
@@ -390,7 +438,10 @@ if(checkLogin()){
     if(!p) return;
     document.getElementById('modalTitle').innerText = 'Edit Pelanggan';
     new bootstrap.Modal(document.getElementById('modalPelanggan')).show();
+    
+    // Set ID lama dan biarkan tetap terkunci (readonly)
     document.getElementById('f_id').value = p.ID;
+    
     document.getElementById('f_nama').value = p.NAMA;
     document.getElementById('f_alamat').value = p.ALAMAT;
     document.getElementById('f_tipe').value = p.TIPE_LANGGANAN || 'PPP';

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dashboard - ACCESSNET</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body{ margin:0; background:#f4f7f6; font-family:Arial,sans-serif; }
     .mobile-topbar { display: none; background: #2c3e50; padding: 10px 15px; color: #fff; position: fixed; top: 0; left: 0; right: 0; z-index: 1001; }
@@ -13,50 +14,181 @@
     .btn-sidebar{ display: block; width:100%; text-align:left; color:#bdc3c7; margin-bottom:8px; border:none; text-decoration: none; padding: 10px; border-radius: 5px; }
     .btn-sidebar:hover, .btn-sidebar.active{ background:#0d6efd !important; color:#fff !important; font-weight:bold; }
     .main-content{ margin-left:250px; padding:20px; transition: margin 0.3s ease; }
-    .card{ border:none; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.1); }
+    .card{ border:none; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.06); }
     @media(max-width:991.98px){
       .mobile-topbar { display: flex; justify-content: space-between; align-items: center; }
       .sidebar{ transform: translateX(-100%); top: 56px; height: calc(100vh - 56px); width: 280px; }
       .sidebar.show { transform: translateX(0); }
       .main-content{ margin-left:0; padding-top: 76px; }
     }
+    .chart-container { position: relative; height: 320px; width: 100%; }
+    .card-summary { border-left: 5px solid #0d6efd; background: #fff; transition: transform 0.2s; }
+    .card-summary:hover { transform: translateY(-3px); }
+    .num-display { font-size: 1.4rem; font-weight: 700; margin-top: 5px; }
   </style>
 </head>
 <body>
 
 <div class="main-content">
   <div class="container-fluid px-0">
-    <div class="card p-3 p-md-5 text-center">
-      <h1 class="fs-2 fs-md-1">Selamat Datang di Portal Accessnet</h1>
-      <p class="lead fs-6 fs-md-4">Sistem Manajemen Pelanggan dan Invoice</p>
+    <div class="card p-3 p-md-4">
+      <div class="text-center mb-4">
+        <h1 class="fs-2 fw-bold text-dark">Portal Dashboard ACCESSNET</h1>
+      </div>
 
-      <div class="row mt-4">
-        <div class="col-sm-6 col-md-4 mb-3">
-          <a href="pelanggan.html" class="card bg-primary text-white p-4 h-100 d-flex align-items-center justify-content-center text-decoration-none">
-            <h4 class="mb-0 text-center fs-5 fs-md-4">Kelola Pelanggan</h4>
-          </a>
+      <div class="row mb-4">
+        <div class="col-6 col-lg-3 mb-3">
+          <div class="card card-summary p-3 border-start border-primary border-4">
+            <span class="text-muted small fw-bold">HARI INI</span>
+            <div id="txtHariIni" class="num-display text-primary">Rp 0</div>
+          </div>
         </div>
-        <div class="col-sm-6 col-md-4 mb-3">
-          <a href="invoice-tagihan.html" class="card bg-success text-white p-4 h-100 d-flex align-items-center justify-content-center text-decoration-none">
-            <h4 class="mb-0 text-center fs-5 fs-md-4">Invoice Tagihan</h4>
-          </a>
+        <div class="col-6 col-lg-3 mb-3">
+          <div class="card card-summary p-3 border-start border-warning border-4">
+            <span class="text-muted small fw-bold">MINGGU INI</span>
+            <div id="txtMingguIni" class="num-display text-warning">Rp 0</div>
+          </div>
         </div>
-        <div class="col-sm-12 col-md-4 mb-3">
-          <a href="data-invoice.html" class="card bg-dark text-white p-4 h-100 d-flex align-items-center justify-content-center text-decoration-none">
-            <h4 class="mb-0 text-center fs-5 fs-md-4">Data Invoice Tersimpan</h4>
-          </a>
+        <div class="col-6 col-lg-3 mb-3">
+          <div class="card card-summary p-3 border-start border-success border-4">
+            <span class="text-muted small fw-bold">BULAN INI</span>
+            <div id="txtBulanIni" class="num-display text-success">Rp 0</div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3 mb-3">
+          <div class="card card-summary p-3 border-start border-dark border-4">
+            <span class="text-muted small fw-bold">TAHUN INI</span>
+            <div id="txtTahunIni" class="num-display text-dark">Rp 0</div>
+          </div>
         </div>
       </div>
+
+      <div class="card p-4 mb-4 bg-white border">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
+          <div>
+            <h3 class="fs-5 mb-0 fw-bold text-dark" id="chartTitle">Grafik Pendapatan Harian</h3>
+          </div>
+          <div class="btn-group mt-2 mt-md-0" role="group">
+            <button type="button" class="btn btn-outline-primary btn-sm active" onclick="updateChart('harian', event)">Harian</button>
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="updateChart('mingguan', event)">Mingguan</button>
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="updateChart('bulanan', event)">Bulanan</button>
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="updateChart('tahunan', event)">Tahunan</button>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="revenueChart"></canvas>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-sm-6 col-md-3 mb-3"><a href="pelanggan.html" class="card bg-primary text-white p-4 h-100 d-flex align-items-center justify-content-center text-decoration-none"><h4 class="mb-0 text-center fs-5">Kelola Pelanggan</h4></a></div>
+        <div class="col-sm-6 col-md-3 mb-3"><a href="paketinternet.html" class="card bg-warning text-dark p-4 h-100 d-flex align-items-center justify-content-center text-decoration-none"><h4 class="mb-0 text-center fs-5">Paket Internet</h4></a></div>
+        <div class="col-sm-6 col-md-3 mb-3"><a href="invoice-tagihan.html" class="card bg-success text-white p-4 h-100 d-flex align-items-center justify-content-center text-decoration-none"><h4 class="mb-0 text-center fs-5">Invoice Tagihan</h4></a></div>
+        <div class="col-sm-6 col-md-3 mb-3"><a href="data-invoice.html" class="card bg-dark text-white p-4 h-100 d-flex align-items-center justify-content-center text-decoration-none"><h4 class="mb-0 text-center fs-5">Data Invoice</h4></a></div>
+      </div>
+
     </div>
   </div>
 </div>
 
 <script src="global.js"></script>
 <script>
-if(checkLogin()){
-  renderNavigation('dashboard');
-}
-</script>
+if(checkLogin()){ renderNavigation('dashboard'); }
 
+let revenueChart;
+let globalChartData = {};
+let activePeriod = 'harian';
+
+function formatRupiah(angka) {
+  return 'Rp ' + String(angka).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+function loadRevenueStats() {
+  callAPI('getRevenueStats', {}, function(dataFromServer) {
+    if (dataFromServer) {
+      globalChartData = dataFromServer;
+      
+      document.getElementById('txtHariIni').innerText = formatRupiah(globalChartData.summary.hariIni || 0);
+      document.getElementById('txtMingguIni').innerText = formatRupiah(globalChartData.summary.mingguIni || 0);
+      document.getElementById('txtBulanIni').innerText = formatRupiah(globalChartData.summary.bulanIni || 0);
+      document.getElementById('txtTahunIni').innerText = formatRupiah(globalChartData.summary.tahunIni || 0);
+
+      globalChartData.harian.label = 'Grafik Omset Harian Minggu Ini';
+      globalChartData.mingguan.label = 'Grafik Omset Per Minggu Bulan Ini';
+      globalChartData.bulanan.label = 'Grafik Omset Per Bulan Tahun Ini';
+      globalChartData.tahunan.label = 'Grafik Omset Per Tahun';
+      
+      initChart();
+    }
+  });
+}
+
+function initChart() {
+  const ctx = document.getElementById('revenueChart').getContext('2d');
+  if (revenueChart) { revenueChart.destroy(); }
+
+  let bColor = '#0d6efd', bgColor = 'rgba(13, 110, 253, 0.08)', titleText = 'Grafik Pendapatan Harian';
+  if (activePeriod === 'mingguan') { bColor = '#ffc107'; bgColor = 'rgba(255, 193, 7, 0.08)'; titleText = 'Grafik Pendapatan Mingguan'; }
+  else if (activePeriod === 'bulanan') { bColor = '#198754'; bgColor = 'rgba(25, 135, 84, 0.08)'; titleText = 'Grafik Pendapatan Bulanan'; }
+  else if (activePeriod === 'tahunan') { bColor = '#212529'; bgColor = 'rgba(33, 37, 41, 0.08)'; titleText = 'Grafik Pendapatan Tahunan'; }
+
+  document.getElementById('chartTitle').innerText = titleText;
+
+  revenueChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: globalChartData[activePeriod].labels,
+      datasets: [{
+        label: globalChartData[activePeriod].label,
+        data: globalChartData[activePeriod].data,
+        borderColor: bColor,
+        backgroundColor: bgColor,
+        borderWidth: 3,
+        fill: true,
+        tension: 0.3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              let value = context.raw || 0;
+              return ' Total: Rp. ' + Number(value).toLocaleString('id-ID');
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              if (value >= 1000000) return 'Rp ' + (value / 1000000).toFixed(1) + ' Jt';
+              if (value >= 1000) return 'Rp ' + (value / 1000).toFixed(0) + ' Rb';
+              return 'Rp ' + value;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function updateChart(period, event) {
+  if (!globalChartData[period] || !revenueChart) return;
+  activePeriod = period;
+
+  initChart();
+
+  const buttons = document.querySelectorAll('.btn-group .btn');
+  buttons.forEach(btn => btn.classList.remove('active'));
+  if (event && event.target) { event.target.classList.add('active'); }
+}
+
+document.addEventListener("DOMContentLoaded", function() { loadRevenueStats(); });
+</script>
 </body>
 </html>
