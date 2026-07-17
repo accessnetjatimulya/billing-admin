@@ -47,7 +47,9 @@
 	  </small>
 	</div>
 
-    <input type="text" id="searchPelanggan" class="form-control mb-3" placeholder="Cari Nama / ID" onkeyup="filterPelanggan()">
+
+   <input type="text" id="searchPelanggan" class="form-control mb-3" placeholder="Cari Nama / ID" oninput="filterPelangganDebounce()">
+
 
     <div class="table-responsive">
       <table class="table table-hover align-middle">
@@ -303,6 +305,20 @@ if(checkLogin()){
     const val = document.getElementById('searchPelanggan').value.toLowerCase();
     renderTable(allPelanggan.filter(p => p.NAMA.toLowerCase().includes(val) || p.ID.toString().includes(val)));
   }
+
+  let searchTimeout;
+
+function filterPelangganDebounce() {
+  // Bersihkan timeout sebelumnya jika pengguna masih mengetik
+  clearTimeout(searchTimeout);
+  
+  // Berikan jeda 250ms sebelum menjalankan fungsi filter
+  searchTimeout = setTimeout(function() {
+    filterPelanggan();
+  }, 250); 
+}
+
+
   function filterByPaket(paket){ renderTable(allPelanggan.filter(p => String(p.PAKET).toUpperCase().includes(paket))); }
   function filterByType(type){ renderTable(allPelanggan.filter(p => String(p.TIPE_LANGGANAN).toUpperCase() == type)); }
   function resetFilter(){ renderTable(allPelanggan); }
@@ -315,6 +331,8 @@ if(checkLogin()){
       return status == 'AKTIF' ? exp >= today : exp < today;
     }));
   }
+
+  
 
   function openModal(){
     editMode = false; currentEditId = '';
