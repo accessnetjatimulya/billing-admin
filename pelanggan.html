@@ -82,8 +82,8 @@
         <form id="formPelanggan">
           <div class="row">
             <div class="col-md-6 mb-2">
-              <label class="form-label">ID Pelanggan (Otomatis)</label>
-              <input type="text" id="f_id" class="form-control" style="background-color: #e9ecef;" readonly required>
+              <label class="form-label">ID Pelanggan <span class="text-danger">*</span></label>
+              <input type="text" id="f_id" class="form-control" placeholder="Masukkan ID Pelanggan" required>
             </div>
             <div class="col-md-6 mb-2">
               <label class="form-label">Nama</label>
@@ -236,7 +236,7 @@ if(checkLogin()){
   function renderTable(data){
     const tbody = document.getElementById('tabelPelangganBody');
     tbody.innerHTML = '';
-    if(data.length == 0){
+    if(!data || data.length == 0){
       tbody.innerHTML = '<tr><td colspan="8" class="text-center">⚠️ Data Tidak Ditemukan / Data Kosong</td></tr>';
       return;
     }
@@ -315,29 +315,17 @@ if(checkLogin()){
     }));
   }
 
-  function getNextId() {
-    if (!allPelanggan || allPelanggan.length === 0) {
-      return 1;
-    }
-    
-    let maxId = 0;
-    allPelanggan.forEach(function(p) {
-      let idNum = parseInt(p.ID, 10);
-      if (!isNaN(idNum) && idNum > maxId) {
-        maxId = idNum;
-      }
-    });
-    
-    return maxId + 1;
-  }
-
   function openModal(){
     editMode = false; currentEditId = '';
     document.getElementById('modalTitle').innerText = 'Tambah Pelanggan';
     document.getElementById('formPelanggan').reset();
     
-    // ID didapatkan otomatis & kolom dikunci (readonly)
-    document.getElementById('f_id').value = getNextId();
+    const inputId = document.getElementById('f_id');
+    if(inputId){
+      inputId.readOnly = false;
+      inputId.style.backgroundColor = '';
+      inputId.value = '';
+    }
     
     loadPaketByTipe();
     new bootstrap.Modal(document.getElementById('modalPelanggan')).show();
@@ -394,6 +382,44 @@ if(checkLogin()){
   }
 
   function simpanData(){
+    const elId = document.getElementById('f_id');
+    const elNama = document.getElementById('f_nama');
+
+    if(!elId || !elNama){
+      alert('Elemen form tidak ditemukan!');
+      return;
+    }
+
+    const inputId = elId.value.trim();
+    const nama = elNama.value.trim();
+
+    // Validasi input Wajib diisi
+    if(!inputId){
+      alert('ID Pelanggan wajib diisi!');
+      elId.focus();
+      return;
+    }
+
+    if(!nama){
+      alert('Nama Pelanggan wajib diisi!');
+      elNama.focus();
+      return;
+    }
+
+    // Cek duplikasi ID Pelanggan
+    const idSudahAda = allPelanggan.some(p => {
+      if(editMode && p.ID == currentEditId){
+        return false; // Abaikan ID milik sendiri jika sedang dalam mode edit tanpa mengubah ID
+      }
+      return p.ID.toString().toLowerCase() === inputId.toLowerCase();
+    });
+
+    if(idSudahAda){
+      alert('ID Pelanggan "' + inputId + '" sudah ada/digunakan! Harap gunakan ID yang lain.');
+      elId.focus();
+      return;
+    }
+
     const btnSimpan = document.getElementById('btnSimpan');
     if(btnSimpan) {
       btnSimpan.disabled = true;
@@ -401,8 +427,8 @@ if(checkLogin()){
     }
 
     const formData = {
-      ID: document.getElementById('f_id').value,
-      NAMA: document.getElementById('f_nama').value,
+      ID: inputId,
+      NAMA: nama,
       ALAMAT: document.getElementById('f_alamat').value,
       TIPE_LANGGANAN: document.getElementById('f_tipe').value,
       NO_HP: document.getElementById('f_kode_negara').value + document.getElementById('f_hp').value,
@@ -437,10 +463,13 @@ if(checkLogin()){
     const p = allPelanggan.find(x => x.ID == id);
     if(!p) return;
     document.getElementById('modalTitle').innerText = 'Edit Pelanggan';
-    new bootstrap.Modal(document.getElementById('modalPelanggan')).show();
     
-    // Set ID lama dan biarkan tetap terkunci (readonly)
-    document.getElementById('f_id').value = p.ID;
+    const inputId = document.getElementById('f_id');
+    if(inputId){
+      inputId.readOnly = false;
+      inputId.style.backgroundColor = '';
+      inputId.value = p.ID;
+    }
     
     document.getElementById('f_nama').value = p.NAMA;
     document.getElementById('f_alamat').value = p.ALAMAT;
@@ -448,7 +477,11 @@ if(checkLogin()){
     loadPaketByTipe();
     document.getElementById('f_paket').value = p.PAKET;
     pilihPaket();
-    document.getElementById('f_hp').value = p.NO_HP.toString().substring(2);
+    document.getElementById('f_hp').value = p.NO_HP ? p.NO_HP.toString().substring(2) : '';
+    document.getElementById('f_expired').value = p.EXPIRED_AT || '';
+    document.getElementById('f_updated').value = p.UPDATED_AT || '';
+
+    new bootstrap.Modal(document.getElementById('modalPelanggan')).show();
   }
 
   function hapusPelanggan(id){
