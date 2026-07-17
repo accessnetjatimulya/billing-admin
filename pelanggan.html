@@ -81,10 +81,11 @@
       <div class="modal-body">
         <form id="formPelanggan">
           <div class="row">
-            <div class="col-md-6 mb-2">
-              <label class="form-label">ID Pelanggan <span class="text-danger">*</span></label>
-              <input type="text" id="f_id" class="form-control" placeholder="Masukkan ID Pelanggan" required>
-            </div>
+			<div class="col-md-6 mb-2">
+			  <label class="form-label">ID Pelanggan <span class="text-danger">*</span></label>
+			  <input type="text" id="f_id" class="form-control" placeholder="Masukkan ID Pelanggan" required oninput="cekDuplikatIdLive()">
+			  <small id="id_error_msg" class="text-danger fw-bold mt-1" style="display: none; font-size: 0.82rem;"></small>
+			</div>
             <div class="col-md-6 mb-2">
               <label class="form-label">Nama</label>
               <input type="text" id="f_nama" class="form-control" required>
@@ -327,6 +328,7 @@ if(checkLogin()){
       inputId.value = '';
     }
     
+	cekDuplikatIdLive(); // <--- TAMBAHKAN BARIS INI (mereset tampilan merah)
     loadPaketByTipe();
     new bootstrap.Modal(document.getElementById('modalPelanggan')).show();
   }
@@ -406,15 +408,8 @@ if(checkLogin()){
       return;
     }
 
-    // Cek duplikasi ID Pelanggan
-    const idSudahAda = allPelanggan.some(p => {
-      if(editMode && p.ID == currentEditId){
-        return false; // Abaikan ID milik sendiri jika sedang dalam mode edit tanpa mengubah ID
-      }
-      return p.ID.toString().toLowerCase() === inputId.toLowerCase();
-    });
-
-    if(idSudahAda){
+	// Cek duplikasi ID Pelanggan & ubah warna input jadi merah secara otomatis
+    if (cekDuplikatIdLive()) {
       alert('ID Pelanggan "' + inputId + '" sudah ada/digunakan! Harap gunakan ID yang lain.');
       elId.focus();
       return;
@@ -457,6 +452,7 @@ if(checkLogin()){
       }
     });
   }
+  
 
   function editPelanggan(id){
     editMode = true; currentEditId = id;
@@ -470,6 +466,8 @@ if(checkLogin()){
       inputId.style.backgroundColor = '';
       inputId.value = p.ID;
     }
+	
+	cekDuplikatIdLive(); // <--- TAMBAHKAN BARIS INI
     
     document.getElementById('f_nama').value = p.NAMA;
     document.getElementById('f_alamat').value = p.ALAMAT;
@@ -485,12 +483,49 @@ if(checkLogin()){
   }
 
   function hapusPelanggan(id){
-    if(confirm('Hapus pelanggan?')) callAPI('deletePelanggan', id, () => loadDataPelanggan());
-  }
+	  if(confirm('Hapus pelanggan?')){
+		callAPI('deletePelanggan', id, function(res){
+		  alert('Data pelanggan berhasil dihapus!');
+		  loadDataPelanggan();
+		});
+	  }
+	}
 
   function pilihKodeNegara(){ document.getElementById('f_kode_negara').value = document.getElementById('kode_negara_select').value; }
   function formatNomor(el){ el.value = el.value.replace(/\D/g,'').replace(/^0+/,''); }
   function hanyaAngka(e){ return e.charCode >= 48 && e.charCode <= 57; }
+  
+  function cekDuplikatIdLive() {
+    const inputEl = document.getElementById('f_id');
+    const errorEl = document.getElementById('id_error_msg');
+    if (!inputEl) return false;
+
+    const val = inputEl.value.trim();
+
+    if (!val) {
+      inputEl.classList.remove('is-invalid', 'text-danger', 'border-danger');
+      if (errorEl) errorEl.style.display = 'none';
+      return false;
+    }
+
+    const idSudahAda = allPelanggan.some(p => {
+      if (editMode && p.ID == currentEditId) return false;
+      return p.ID.toString().toLowerCase() === val.toLowerCase();
+    });
+
+    if (idSudahAda) {
+      inputEl.classList.add('is-invalid', 'text-danger', 'border-danger');
+      if (errorEl) {
+        errorEl.style.display = 'block';
+        errorEl.innerText = 'ID Pelanggan "' + val + '" sudah ada/digunakan! Harap gunakan ID yang lain.';
+      }
+      return true;
+    } else {
+      inputEl.classList.remove('is-invalid', 'text-danger', 'border-danger');
+      if (errorEl) errorEl.style.display = 'none';
+      return false;
+    }
+  }
 </script>
 
 </body>
