@@ -1,7 +1,7 @@
 // ==========================================
 // CONFIG: PASTE URL WEB APP APPS SCRIPT DI SINI
 // ==========================================
-const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzZmp9AohQT3pcwBejDSPqBiqhbyxKkhXknzzPFjXgtio0HQWTuhrymMtL5iGdQVBNL/exec";
+const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbx3CW6WDfBo7p9-KiOCjCXh6u2X6u_Z5f23VZZ6uhVpibr6_P3BgWKDXgCKcbRR2cFH/exec";
 
 // Fungsi Global Jembatan API
 function callAPI(action, data, onSuccess, onFailure) {
