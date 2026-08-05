@@ -100,32 +100,56 @@ let globalChartData = {};
 let activePeriod = 'harian';
 
 function formatRupiah(angka) {
-  return 'Rp ' + String(angka).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return 'Rp ' + String(angka || 0).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+function renderDashboardUI(stats) {
+  if (!stats || !stats.summary) return;
+  globalChartData = stats;
+
+  document.getElementById('txtHariIni').innerText = formatRupiah(globalChartData.summary.hariIni);
+  document.getElementById('txtMingguIni').innerText = formatRupiah(globalChartData.summary.mingguIni);
+  document.getElementById('txtBulanIni').innerText = formatRupiah(globalChartData.summary.bulanIni);
+  document.getElementById('txtTahunIni').innerText = formatRupiah(globalChartData.summary.tahunIni);
+
+  if (globalChartData.harian) globalChartData.harian.label = 'Grafik Omset Harian Minggu Ini';
+  if (globalChartData.mingguan) globalChartData.mingguan.label = 'Grafik Omset Per Minggu Bulan Ini';
+  if (globalChartData.bulanan) globalChartData.bulanan.label = 'Grafik Omset Per Bulan Tahun Ini';
+  if (globalChartData.tahunan) globalChartData.tahunan.label = 'Grafik Omset Per Tahun';
+
+  initChart();
 }
 
 function loadRevenueStats() {
-  callAPI('getRevenueStats', {}, function(dataFromServer) {
-    if (dataFromServer) {
-      globalChartData = dataFromServer;
-      
-      document.getElementById('txtHariIni').innerText = formatRupiah(globalChartData.summary.hariIni || 0);
-      document.getElementById('txtMingguIni').innerText = formatRupiah(globalChartData.summary.mingguIni || 0);
-      document.getElementById('txtBulanIni').innerText = formatRupiah(globalChartData.summary.bulanIni || 0);
-      document.getElementById('txtTahunIni').innerText = formatRupiah(globalChartData.summary.tahunIni || 0);
-
-      globalChartData.harian.label = 'Grafik Omset Harian Minggu Ini';
-      globalChartData.mingguan.label = 'Grafik Omset Per Minggu Bulan Ini';
-      globalChartData.bulanan.label = 'Grafik Omset Per Bulan Tahun Ini';
-      globalChartData.tahunan.label = 'Grafik Omset Per Tahun';
-      
-      initChart();
+  // 1. LANGKAH INSTAN (0.01 Detik): Render dari Local Storage
+  const cachedData = localStorage.getItem('CACHE_LOCAL_DASHBOARD');
+  if (cachedData) {
+    try {
+      const parsedCache = JSON.parse(cachedData);
+      renderDashboardUI(parsedCache);
+    } catch (e) {
+      console.warn("Gagal parse cache dashboard:", e);
     }
+  }
+
+  // 2. BACKGROUND SYNC (0.5 Detik): Tarik statistik terbaru dari server
+  callAPI('getRevenueStats', {}, function(dataFromServer) {
+    if (dataFromServer && !dataFromServer.error) {
+      // Simpan ke Cache Local Browser
+      localStorage.setItem('CACHE_LOCAL_DASHBOARD', JSON.stringify(dataFromServer));
+      // Perbarui tampilan dengan data terbaru
+      renderDashboardUI(dataFromServer);
+    }
+  }, function(err) {
+    console.error("Gagal sinkronisasi data omset:", err);
   });
 }
 
 function initChart() {
   const ctx = document.getElementById('revenueChart').getContext('2d');
   if (revenueChart) { revenueChart.destroy(); }
+
+  if (!globalChartData[activePeriod] || !globalChartData[activePeriod].labels) return;
 
   let bColor = '#0d6efd', bgColor = 'rgba(13, 110, 253, 0.08)', titleText = 'Grafik Pendapatan Harian';
   if (activePeriod === 'mingguan') { bColor = '#ffc107'; bgColor = 'rgba(255, 193, 7, 0.08)'; titleText = 'Grafik Pendapatan Mingguan'; }

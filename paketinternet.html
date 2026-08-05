@@ -59,11 +59,13 @@
               <th class="text-center" style="width: 180px;">AKSI</th>
             </tr>
           </thead>
-          <tbody id="tabelPaketBody">
-            <tr>
-              <td colspan="4" class="text-center py-4">Memuat data paket internet...</td>
-            </tr>
-          </tbody>
+			<tbody id="tabelPaketBody">
+			  <tr>
+				<td colspan="5" class="text-center py-4">
+				  <div class="spinner-border spinner-border-sm text-primary" role="status"></div> Memuat data paket internet...
+				</td>
+			  </tr>
+			</tbody>
         </table>
       </div>
     </div>
@@ -119,28 +121,86 @@
     loadDataPaket();
   });
 
-  // Ambil data paket dari Google Sheets melalui API Web App
-  function loadDataPaket() {
+  // FUNGSI KHUSUS: Tampilkan Popup Notifikasi Berhasil (Toast Floating)
+  function tampilkanPopupSukses(pesan) {
+    let container = document.getElementById('toastSuksesContainer');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'toastSuksesContainer';
+      container.className = 'toast-container position-fixed top-0 end-0 p-3';
+      container.style.zIndex = '9999';
+      document.body.appendChild(container);
+    }
+
+    const toastId = 'toast-' + Date.now();
+    const toastHtml = `
+      <div id="${toastId}" class="toast align-items-center text-bg-success border-0 show shadow-lg mb-2" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body fw-bold fs-6">
+            ✅ ${pesan}
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="document.getElementById('${toastId}').remove()"></button>
+        </div>
+      </div>
+    `;
+
+    container.insertAdjacentHTML('beforeend', toastHtml);
+
+    setTimeout(() => {
+      const el = document.getElementById(toastId);
+      if (el) {
+        el.classList.remove('show');
+        setTimeout(() => el.remove(), 300);
+      }
+    }, 2500);
+  }
+
+  // 1. Ambil data paket dari Google Sheets melalui API Web App
+  function loadDataPaket(isBackgroundSync = false) {
     const tbody = document.getElementById('tabelPaketBody');
-    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary"></div> Memuat data Paket Internet...</td></tr>`;
-    
+    const cachedData = localStorage.getItem('CACHE_LOCAL_PAKET');
+
+    if (!isBackgroundSync && tbody) {
+      tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary" role="status"></div> Memuat data Paket Internet...</td></tr>`;
+    }
+
+    setTimeout(function() {
+      if (cachedData) {
+        try {
+          listSemuaPaket = JSON.parse(cachedData) || [];
+          jalankanFilterData();
+        } catch (e) {
+          console.warn("Gagal membaca cache paket:", e);
+        }
+      }
+    }, 200);
+
     callAPI('getPaket', null, function(data) {
-      listSemuaPaket = data || [];
-      jalankanFilterData(); 
+      if (Array.isArray(data)) {
+        listSemuaPaket = data;
+        localStorage.setItem('CACHE_LOCAL_PAKET', JSON.stringify(data));
+        jalankanFilterData();
+      }
     }, function(err) {
-      tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-4">Gagal mengambil data: ${err}</td></tr>`;
+      console.warn("Sync background server gagal/delay:", err);
+      if (!cachedData && tbody) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-4">Gagal mengambil data dari server. Silakan muat ulang.</td></tr>`;
+      }
     });
   }
 
-  // Fungsi Inti Penyaringan
+  // 2. Fungsi Filter Data Paket
   function jalankanFilterData() {
     const kataKunci = document.getElementById('searchPaket').value.toLowerCase().trim();
     const tipeTerpilih = document.getElementById('filterTipe').value;
     const tbody = document.getElementById('tabelPaketBody');
 
+    if (!tbody) return;
+
     const dataHasilFilter = listSemuaPaket.filter(paket => {
       const cocokTipe = (tipeTerpilih === 'SEMUA' || paket.TIPE === tipeTerpilih);
-      const cocokNama = paket.NAMA.toLowerCase().includes(kataKunci);
+      const namaValid = paket.NAMA ? String(paket.NAMA).toLowerCase() : '';
+      const cocokNama = namaValid.includes(kataKunci);
       return cocokTipe && cocokNama;
     });
 
@@ -154,9 +214,9 @@
       const badgeColor = paket.TIPE === 'PPP' ? 'bg-info text-dark' : 'bg-warning text-dark';
       html += `
         <tr>
-          <td><span class="badge ${badgeColor} fw-bold">${paket.TIPE}</span></td>
-          <td class="fw-bold text-secondary">${paket.NAMA}</td>
-          <td>Rp ${Number(paket.HARGA).toLocaleString('id-ID')}</td>
+          <td><span class="badge ${badgeColor} fw-bold">${paket.TIPE || 'PPP'}</span></td>
+          <td class="fw-bold text-secondary">${paket.NAMA || '-'}</td>
+          <td>Rp ${Number(paket.HARGA || 0).toLocaleString('id-ID')}</td>
           <td>
             <div class="d-flex justify-content-center align-items-center gap-2">
               <button class="btn btn-sm btn-outline-dark" onclick="bukaModalEdit('${paket.ID}')">✏️ Edit</button>
@@ -168,30 +228,38 @@
     tbody.innerHTML = html;
   }
 
+  // 3. Buka Modal Tambah Paket (ID Harus Kosong "")
   function bukaModalTambah() {
     document.getElementById('modalTitle').innerText = 'Tambah Paket Baru';
-    document.getElementById('f_id').value = '';
+    document.getElementById('f_id').value = ''; // KOSONGKAN ID AGAR BACKEND MEMBUAT ID BARU
     document.getElementById('f_tipe').value = 'PPP';
     document.getElementById('f_nama').value = '';
     document.getElementById('f_harga').value = '';
-    modalInstance.show();
+    if (modalInstance) modalInstance.show();
   }
 
+  // 4. Buka Modal Edit Paket (ID Memakai ID Asli dari Sheet)
   function bukaModalEdit(id) {
-    const p = listSemuaPaket.find(x => x.ID == id);
-    if (!p) return;
+    const p = listSemuaPaket.find(x => String(x.ID) === String(id));
+    if (!p) {
+      alert('Data paket tidak ditemukan!');
+      return;
+    }
     
     document.getElementById('modalTitle').innerText = 'Edit Paket Internet';
-    document.getElementById('f_id').value = p.ID;
-    document.getElementById('f_tipe').value = p.TIPE;
-    document.getElementById('f_nama').value = p.NAMA;
-    document.getElementById('f_harga').value = p.HARGA;
+    document.getElementById('f_id').value = p.ID; // GUNAKAN ID ASLI DARI GOOGLE SHEET (misal: PKTP_12)
+    document.getElementById('f_tipe').value = p.TIPE || 'PPP';
+    document.getElementById('f_nama').value = p.NAMA || '';
+    document.getElementById('f_harga').value = p.HARGA || '';
     
-    modalInstance.show();
+    if (modalInstance) modalInstance.show();
   }
 
+  // 5. Simpan Paket (Tambah / Edit)
   function simpanPaket() {
     const btnSimpan = document.getElementById('btnSimpan');
+    const idPaket = document.getElementById('f_id').value.trim();
+    const tipePaket = document.getElementById('f_tipe').value;
     const namaPaket = document.getElementById('f_nama').value.trim();
     const hargaPaket = document.getElementById('f_harga').value.trim();
 
@@ -200,38 +268,73 @@
       return;
     }
 
-    btnSimpan.disabled = true;
-    btnSimpan.innerText = 'Menyimpan...';
+    // Efek Processing pada Tombol
+    if (btnSimpan) {
+      btnSimpan.disabled = true;
+      btnSimpan.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Menyimpan...`;
+    }
+
+    const isEdit = idPaket !== "";
 
     const payload = {
-      ID: document.getElementById('f_id').value,
-      TIPE: document.getElementById('f_tipe').value,
+      ID: idPaket, // Kirim ID asli jika Edit, atau "" jika Tambah Baru
+      TIPE: tipePaket,
       NAMA: namaPaket,
       HARGA: hargaPaket
     };
 
+    // Update Tampilan Lokal Instan (Optimistic Update)
+    if (isEdit) {
+      const idx = listSemuaPaket.findIndex(p => String(p.ID) === String(idPaket));
+      if (idx !== -1) {
+        listSemuaPaket[idx] = { ...listSemuaPaket[idx], ...payload };
+      }
+    } else {
+      // Sementara tampilkan di paling atas dengan temp ID
+      listSemuaPaket.unshift({ ...payload, ID: 'TEMP-' + Date.now() });
+    }
+
+    localStorage.setItem('CACHE_LOCAL_PAKET', JSON.stringify(listSemuaPaket));
+    jalankanFilterData();
+
+    // Tutup Modal & Tampilkan Popup Sukses
+    setTimeout(() => {
+      if (btnSimpan) {
+        btnSimpan.disabled = false;
+        btnSimpan.innerHTML = 'Simpan Paket';
+      }
+      if (modalInstance) modalInstance.hide();
+
+      const pesanSukses = isEdit ? 'Paket internet berhasil diperbarui!' : 'Paket internet baru berhasil ditambahkan!';
+      tampilkanPopupSukses(pesanSukses);
+    }, 400);
+
+    // Kirim ke Backend Google Apps Script
     callAPI('savePaket', payload, function(res) {
-      alert(res);
-      modalInstance.hide();
-      loadDataPaket();
-      btnSimpan.disabled = false;
-      btnSimpan.innerText = 'Simpan Paket';
+      console.log("Response simpan backend:", res);
+      // Refresh data resmi dari server untuk menyelaraskan ID baru dari sheet
+      loadDataPaket(true);
     }, function(err) {
-      alert('Gagal menyimpan paket: ' + err);
-      btnSimpan.disabled = false;
-      btnSimpan.innerText = 'Simpan Paket';
+      console.warn("Pengiriman paket ke server gagal/ditunda:", err);
+      loadDataPaket(true);
     });
   }
 
+  // 6. Hapus Paket
   function hapusPaket(id) {
-    if (confirm('Apakah Anda yakin ingin menghapus data paket ini secara permanen?')) {
-      callAPI('deletePaket', id, function(res) {
-        alert(res);
-        loadDataPaket();
-      }, function(err) {
-        alert('Gagal menghapus paket: ' + err);
-      });
-    }
+    if (!confirm('Apakah Anda yakin ingin menghapus data paket ini secara permanen?')) return;
+
+    listSemuaPaket = listSemuaPaket.filter(p => String(p.ID) !== String(id));
+    localStorage.setItem('CACHE_LOCAL_PAKET', JSON.stringify(listSemuaPaket));
+    jalankanFilterData();
+
+    tampilkanPopupSukses('Paket internet berhasil dihapus!');
+
+    callAPI('deletePaket', id, function(res) {
+      console.log("Response hapus backend:", res);
+    }, function(err) {
+      console.warn("Hapus data di server gagal/ditunda:", err);
+    });
   }
 </script>
 </body>

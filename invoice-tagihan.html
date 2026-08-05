@@ -363,13 +363,12 @@ img{
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="global.js"></script>
 <script src="assets-base64.js"></script>
-<script>
-if(checkLogin()){
-  renderNavigation('invoice-tagihan');
-}
-</script>
 
 <script>
+  if (checkLogin()) {
+    renderNavigation('invoice-tagihan');
+  }
+
   let allPelanggan = [];
   let internetTimeFetched = null;
   let idPelangganDipilih = '';
@@ -378,114 +377,137 @@ if(checkLogin()){
   let statusSistemExpired = false;
   let jumlahLompatBulanTerpilih = 1;
 
-window.onload = function() {
-  ambilWaktuInternetDanLoad();
+  window.onload = function() {
+    // 1. Muat gambar base64 secara instan tanpa delay 300ms
+    const logo = document.getElementById('logoAccessnet');
+    const qris = document.getElementById('qrisAccessnet');
+    if (logo) logo.src = window.LOGO_ACCESSNET || '';
+    if (qris) qris.src = window.QRIS_ACCESSNET || '';
 
-  setTimeout(() => {
-    document.getElementById('logoAccessnet').src = window.LOGO_ACCESSNET || '';
-    document.getElementById('qrisAccessnet').src = window.QRIS_ACCESSNET || '';
-  }, 300);
-};
+    // 2. Muat data secara super cepat
+    ambilWaktuInternetDanLoad();
+  };
 
-	async function ambilWaktuInternetDanLoad(){
-    const tbody = document.getElementById('tabelTagihanBody');
-    if (tbody) {
-      tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary" role="status"></div> Memuat database tagihan...</td></tr>';
+  // 1. FUNGSI KHUSUS: Tampilkan Popup Toast Floating Sukses
+  function tampilkanPopupSukses(pesan) {
+    let container = document.getElementById('toastSuksesContainer');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'toastSuksesContainer';
+      container.className = 'toast-container position-fixed top-0 end-0 p-3';
+      container.style.zIndex = '9999';
+      document.body.appendChild(container);
     }
 
-	  let today = new Date();
-	  today.setHours(0,0,0,0);
-
-	  callAPI('getWaktuNtpServer', null, function(res){
-		try{
-		  if(res && res.datetime){
-			today = new Date(res.datetime);
-			today.setHours(0,0,0,0);
-		  }
-		}catch(err){
-		  console.warn('Gagal parsing waktu server', err);
-		}
-
-		internetTimeFetched = today;
-
-		callAPI('getPelangganData', null, function(data) {
-		  allPelanggan = data || [];
-		  renderTagihanTable();
-		}, function(err) {
-		  console.error(err);
-		  if (tbody) {
-		    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger fw-bold">Gagal terhubung ke Database Google Sheets via Cloud API.</td></tr>';
-		  }
-		});
-
-	  }, function(err){
-		console.warn('Gagal ambil waktu server, fallback local time', err);
-		internetTimeFetched = today;
-
-		callAPI('getPelangganData', null, function(data){
-		  allPelanggan = data || [];
-		  renderTagihanTable();
-		}, function(err){
-		  console.error(err);
-		});
-	  });
-	}
-
-  function filterTagihanTable() {
-  const keyword = document.getElementById('searchTagihan').value.toLowerCase().trim();
-  const filterStatus = document.getElementById('filterStatusBayar').value; // Ambil nilai "SEMUA", "SUDAH BAYAR", atau "BELUM BAYAR"
-  const tbody = document.getElementById('tabelTagihanBody');
-  const rows = tbody.querySelectorAll('tr:not(.no-data-row)'); // Cari semua baris data asli (abaikan baris pesan kosong jika ada)
-
-  // Hapus pesan "Data Kosong" yang lama terlebih dahulu jika sebelumnya pernah muncul
-  const existingNoDataRow = tbody.querySelector('.no-data-row');
-  if (existingNoDataRow) {
-    existingNoDataRow.remove();
-  }
-
-  let jumlahDataTampil = 0;
-
-  rows.forEach(row => {
-    // 1. Ambil teks seluruh baris untuk pencarian Nama/ID
-    const textBaris = row.textContent.toLowerCase();
-    
-    // 2. Ambil status bayar khusus dari kolom status (kolom ke-6 / indeks ke-5)
-    const cellStatus = row.cells[5];
-    const statusText = cellStatus ? cellStatus.textContent.trim() : '';
-
-    // Logika pencocokan kata kunci pencarian
-    const cocokKeyword = textBaris.includes(keyword);
-
-    // Logika pencocokan filter status pembayaran
-    let cocokStatus = false;
-    if (filterStatus === "SEMUA") {
-      cocokStatus = true;
-    } else {
-      cocokStatus = (statusText === filterStatus);
-    }
-
-    // Tampilkan baris jika memenuhi kedua kondisi tersebut
-    if (cocokKeyword && cocokStatus) {
-      row.style.display = '';
-      jumlahDataTampil++; // Tambah perhitungan data yang berhasil tampil
-    } else {
-      row.style.display = 'none';
-    }
-  });
-
-  // Jika setelah difilter ternyata TIDAK ADA data yang tampil sama sekali
-  if (jumlahDataTampil === 0) {
-    const trNoData = document.createElement('tr');
-    trNoData.className = 'no-data-row'; // Beri class penanda agar tidak ikut terhitung nanti
-    trNoData.innerHTML = `
-      <td colspan="7" class="text-center py-4 text-muted fw-bold">
-        ⚠️ Data Tidak Ditemukan / Data Kosong
-      </td>
+    const toastId = 'toast-' + Date.now();
+    const toastHtml = `
+      <div id="${toastId}" class="toast align-items-center text-bg-success border-0 show shadow-lg mb-2" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body fw-bold fs-6">
+            ✅ ${pesan}
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="document.getElementById('${toastId}').remove()"></button>
+        </div>
+      </div>
     `;
-    tbody.appendChild(trNoData);
-  }
-}
 
+    container.insertAdjacentHTML('beforeend', toastHtml);
+
+    setTimeout(() => {
+      const el = document.getElementById(toastId);
+      if (el) {
+        el.classList.remove('show');
+        setTimeout(() => el.remove(), 300);
+      }
+    }, 2500);
+  }
+
+  // 2. Ambil Waktu NTP Server & Load Data Pelanggan (OPTIMIZED & PARALLEL)
+ function ambilWaktuInternetDanLoad() {
+    // Gunakan waktu lokal terlebih dahulu agar UI tidak tertahan
+    internetTimeFetched = new Date();
+    internetTimeFetched.setHours(0,0,0,0);
+
+    // BACA PELANGGAN SECARA INSTAN
+    callAPI('getPelangganData', null, function(data) {
+      // Hanya render jika data benar-benar ada (tidak null/kosong)
+      if (data && data.length > 0) {
+        allPelanggan = data;
+        renderTagihanTable();
+      } else if (!allPelanggan || allPelanggan.length === 0) {
+        // Jika cache belum ada / masih kosong, biarkan spinner loading tetap berjalan
+        const tbody = document.getElementById('tabelTagihanBody');
+        if (tbody) {
+          tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary" role="status"></div> Memuat database tagihan...</td></tr>';
+        }
+      }
+    }, function(err) {
+      console.error(err);
+      const tbody = document.getElementById('tabelTagihanBody');
+      if (tbody && (!allPelanggan || allPelanggan.length === 0)) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger fw-bold py-4">Gagal terhubung ke Database Google Sheets via Cloud API.</td></tr>';
+      }
+    });
+
+    // Jalankan Sinkronisasi NTP Server secara asinkron di latar belakang
+    callAPI('getWaktuNtpServer', null, function(res) {
+      if (res && res.datetime) {
+        const todayServer = new Date(res.datetime);
+        todayServer.setHours(0,0,0,0);
+        internetTimeFetched = todayServer;
+        // Render ulang hanya jika data pelanggan sudah siap/berhasil dimuat
+        if (allPelanggan && allPelanggan.length > 0) {
+          renderTagihanTable(); 
+        }
+      }
+    }, function(err) {
+      console.warn('Fallback waktu lokal digunakan:', err);
+    });
+  }
+
+  // 3. Filter Tabel Tagihan
+  function filterTagihanTable() {
+    const keyword = document.getElementById('searchTagihan').value.toLowerCase().trim();
+    const filterStatus = document.getElementById('filterStatusBayar').value;
+    const tbody = document.getElementById('tabelTagihanBody');
+    if (!tbody) return;
+
+    const rows = tbody.querySelectorAll('tr:not(.no-data-row)');
+
+    const existingNoDataRow = tbody.querySelector('.no-data-row');
+    if (existingNoDataRow) existingNoDataRow.remove();
+
+    let jumlahDataTampil = 0;
+
+    rows.forEach(row => {
+      const textBaris = row.textContent.toLowerCase();
+      const cellStatus = row.cells[5];
+      const statusText = cellStatus ? cellStatus.textContent.trim() : '';
+
+      const cocokKeyword = textBaris.includes(keyword);
+      const cocokStatus = (filterStatus === "SEMUA") || (statusText === filterStatus);
+
+      if (cocokKeyword && cocokStatus) {
+        row.style.display = '';
+        jumlahDataTampil++;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+
+    if (jumlahDataTampil === 0) {
+      const trNoData = document.createElement('tr');
+      trNoData.className = 'no-data-row';
+      trNoData.innerHTML = `
+        <td colspan="7" class="text-center py-4 text-muted fw-bold">
+          ⚠️ Data Tidak Ditemukan / Data Kosong
+        </td>
+      `;
+      tbody.appendChild(trNoData);
+    }
+  }
+
+  // 4. Kalkulasi Jatuh Tempo & Status Bayar
   function hitungKalkulasiTagihan(expiredAtLama) {
     const opsiBulan = ["JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"];
     const today = internetTimeFetched ? new Date(internetTimeFetched.getTime()) : new Date();
@@ -515,11 +537,13 @@ window.onload = function() {
     }
   }
 
+  // 5. Render Tabel Data Tagihan
   function renderTagihanTable() {
     const tbody = document.getElementById('tabelTagihanBody');
+    if (!tbody) return;
     
     if (!allPelanggan || allPelanggan.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Tidak ada data pelanggan terdata.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Tidak ada data pelanggan terdata.</td></tr>';
       return;
     }
 
@@ -554,38 +578,14 @@ window.onload = function() {
       `;
       tbody.appendChild(tr);
     });
-	
-	// Pastikan filter langsung diterapkan jika sebelumnya user sudah memilih status tertentu
-    filterTagihanTable(); // <-- TAMBAHKAN INI
+
+    filterTagihanTable();
   }
 
-  function prosesRollbackPelangganDariModal() {
-    const p = allPelanggan.find(x => x.ID == idPelangganDipilih);
-    if (!p) return;
-
-    if (confirm(`Apakah Anda yakin ingin melakukan Rollback (Membatalkan Perpanjangan) untuk pelanggan "${p.NAMA}"?\n\nStatus data di Google Sheets akan dikembalikan ke posisi semula.`)) {
-      
-      if(modalInvoiceInstance) {
-        modalInvoiceInstance.hide();
-      }
-
-      const tbody = document.getElementById('tabelTagihanBody');
-      if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4"><div class="spinner-border spinner-border-sm text-danger" role="status"></div> Melakukan rollback data...</td></tr>';
-      }
-      
-      callAPI('rollbackInvoice', { id: p.ID }, function(response) {
-        alert(response || 'Berhasil melakukan rollback data pelanggan!');
-        ambilWaktuInternetDanLoad();
-      }, function(err) {
-        alert('Gagal melakukan rollback data: ' + err);
-        ambilWaktuInternetDanLoad();
-      });
-    }
-  }
-
+  // 6. Opsi Dropdown Periode
   function generatePeriodeOptionsWithLock(expiredAtStr) {
     const dropdown = document.getElementById('inputPeriodeTagihan');
+    if (!dropdown) return;
     dropdown.innerHTML = '';
 
     const opsiBulan = ["JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"];
@@ -639,25 +639,33 @@ window.onload = function() {
     }
   }
 
+  // 7. Buka Modal Invoice Preview
   function bukaPopUpModalInvoice(idPelanggan) {
-    const p = allPelanggan.find(x => x.ID == idPelanggan);
+    const p = allPelanggan.find(x => String(x.ID) === String(idPelanggan));
     if (!p) return;
 
     idPelangganDipilih = idPelanggan;
     const kalkulasi = hitungKalkulasiTagihan(p.EXPIRED_AT);
     statusSistemExpired = kalkulasi.isExpiredTrue;
 
-    // --- LOGIKA UTAMA PERBAIKAN TOMBOL ---
-    // Dianggap sudah perpanjang jika kolom database bernilai TRUE ATAU status kalkulasinya adalah "SUDAH BAYAR"
     const sudahPerpanjang = (p.SUDAH_DIBAYAR_SEKARANG === true || String(p.SUDAH_DIBAYAR_SEKARANG).toUpperCase() === 'TRUE' || kalkulasi.statusBayar === "SUDAH BAYAR");
     const btnRollback = document.getElementById('btnRollbackInvoiceModal');
     
-    if(sudahPerpanjang) {
-      btnRollback.style.display = 'inline-block';
-    } else {
-      btnRollback.style.display = 'none';
+    if (btnRollback) {
+      if (sudahPerpanjang) {
+        btnRollback.style.display = 'inline-block';
+        btnRollback.disabled = false;
+        btnRollback.innerText = 'Rollback Invoice';
+      } else {
+        btnRollback.style.display = 'none';
+      }
     }
-    // -------------------------------------
+
+    const btnSimpan = document.getElementById('btnSimpanInvoiceFinal');
+    if (btnSimpan) {
+      btnSimpan.disabled = false;
+      btnSimpan.innerText = 'Perpanjang';
+    }
 
     const today = internetTimeFetched ? new Date(internetTimeFetched.getTime()) : new Date();
     const formatTanggalDateInput = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -665,7 +673,7 @@ window.onload = function() {
     const angkaAcak = Math.floor(Math.random() * 90000) + 10000;
     const nomorInvoice = "INV0000" + angkaAcak;
 
-    baseNominalHarga = Number(String(p.HARGA_PAKET).replace(/[^0-9]/g,''));
+    baseNominalHarga = Number(String(p.HARGA_PAKET || 0).replace(/[^0-9]/g,''));
 
     document.getElementById('pdfIdpel').innerText = p.ID;
     document.getElementById('pdfNama').innerText = p.NAMA;
@@ -690,19 +698,20 @@ window.onload = function() {
     modalInvoiceInstance.show();
   }
 
+  // 8. Live Update Preview Invoice saat Form Diubah
   function updateLivePreviewInvoice() {
     const rawTglBayar = document.getElementById('inputTanggalBayar').value;
     const dropdownPeriode = document.getElementById('inputPeriodeTagihan');
-    const periode = dropdownPeriode.value;
+    const periode = dropdownPeriode ? dropdownPeriode.value : '-';
 
-    const optTerpilih = dropdownPeriode.options[dropdownPeriode.selectedIndex];
+    const optTerpilih = dropdownPeriode ? dropdownPeriode.options[dropdownPeriode.selectedIndex] : null;
     jumlahLompatBulanTerpilih = optTerpilih ? (parseInt(optTerpilih.getAttribute('data-index-lompat')) || 1) : 1;
 
     const discount = Number(document.getElementById('inputDiscount').value) || 0;
     const biayaAdmin = Number(document.getElementById('inputBiayaAdmin').value) || 0;
 
     let tglBayarFormatCetak = '-';
-    if(rawTglBayar) {
+    if (rawTglBayar) {
       const s = rawTglBayar.split('-');
       tglBayarFormatCetak = `${s[2]}/${s[1]}/${s[0]}`;
     }
@@ -722,125 +731,141 @@ window.onload = function() {
     document.getElementById('pdfGrand').innerText = 'Rp ' + totalTagihan.toLocaleString('id-ID');
   }
 
+  // 9. Proses Perpanjang & Generate PDF
   async function prosesSimpanInvoiceSesuaiPreviewHtml() {
-  const p = allPelanggan.find(x => x.ID == idPelangganDipilih);
-  if (!p) return;
+    const p = allPelanggan.find(x => String(x.ID) === String(idPelangganDipilih));
+    if (!p) return;
 
-  const btnProses = document.getElementById('btnSimpanInvoiceFinal');
-  btnProses.disabled = true;
-  btnProses.innerText = "⏳ Memproses...";
-
-  try {
-    const original = document.getElementById('invoicePdfArea');
-
-    const clone = original.cloneNode(true);
-    clone.style.width = '794px';
-    clone.style.height = '1123px';
-    clone.style.margin = '0';
-    clone.style.padding = '40px 40px 30px 40px';
-    clone.style.transform = 'none';
-    clone.style.zoom = '1';
-    clone.style.position = 'relative';
-    clone.style.left = '0';
-    clone.style.top = '0';
-    clone.style.overflow = 'hidden';
-
-    const wrapper = document.createElement('div');
-    wrapper.style.position = 'fixed';
-    wrapper.style.left = '-100000px';
-    wrapper.style.top = '0';
-    wrapper.appendChild(clone);
-    document.body.appendChild(wrapper);
-
-    await new Promise(r => setTimeout(r, 300));
-
-    const opt = {
-      margin: [0,0,0,0],
-      filename: document.getElementById('pdfInvoice').innerText + '.pdf',
-      image: {
-        type: 'jpeg',
-        quality: 1
-      },
-      html2canvas: {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        width: 794,
-        height: 1123,
-        scrollX: 0,
-        scrollY: 0
-      },
-      jsPDF: {
-        unit: 'px',
-        format: [794,1123],
-        orientation: 'portrait'
-      }
-    };
-
-    const worker = html2pdf()
-      .set(opt)
-      .from(clone);
-
-    const pdf = await worker.toPdf().get('pdf');
-
-    if(pdf.internal.getNumberOfPages() > 1){
-      pdf.deletePage(2);
+    const btnProses = document.getElementById('btnSimpanInvoiceFinal');
+    if (btnProses) {
+      btnProses.disabled = true;
+      btnProses.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Memproses PDF...`;
     }
 
-    const base64DataRaw = pdf.output('datauristring').split(',')[1];
+    try {
+      const original = document.getElementById('invoicePdfArea');
 
-    const dataKirimBackend = {
-      noInvoice: document.getElementById('pdfInvoice').innerText,
-      tanggal: document.getElementById('pdfTanggal').innerText,
-      id: document.getElementById('pdfIdpel').innerText,
-      nama: document.getElementById('pdfNama').innerText,
-      periode: document.getElementById('inputPeriodeTagihan').value,
-      paket: document.getElementById('pdfDeskripsi').innerText,
-      tagihan: document.getElementById('pdfGrand').innerText,
-      base64: base64DataRaw,
-      isExpired: statusSistemExpired,
-      jumlahBulan: jumlahLompatBulanTerpilih
-    };
+      const clone = original.cloneNode(true);
+      clone.style.width = '794px';
+      clone.style.height = '1123px';
+      clone.style.margin = '0';
+      clone.style.padding = '40px 40px 30px 40px';
+      clone.style.transform = 'none';
+      clone.style.zoom = '1';
+      clone.style.position = 'relative';
+      clone.style.left = '0';
+      clone.style.top = '0';
+      clone.style.overflow = 'hidden';
 
-    callAPI(
-      'simpanInvoice',
-      dataKirimBackend,
-      async function(urlDrivePdf) {
-        await worker.save();
-        document.body.removeChild(wrapper);
-        alert('Invoice berhasil dibuat & diunduh otomatis!');
-        location.reload();
-      },
-      function(errMessage) {
-        document.body.removeChild(wrapper);
-        alert('Gagal memproses Cloud: ' + errMessage);
-        resetTombolSelesai(btnProses);
+      const wrapper = document.createElement('div');
+      wrapper.style.position = 'fixed';
+      wrapper.style.left = '-100000px';
+      wrapper.style.top = '0';
+      wrapper.appendChild(clone);
+      document.body.appendChild(wrapper);
+
+      await new Promise(r => setTimeout(r, 100)); // Dipercepat dari 300ms ke 100ms
+
+      const opt = {
+        margin: [0,0,0,0],
+        filename: document.getElementById('pdfInvoice').innerText + '.pdf',
+        image: { type: 'jpeg', quality: 1 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          logging: false,
+          backgroundColor: '#ffffff',
+          width: 794,
+          height: 1123,
+          scrollX: 0,
+          scrollY: 0
+        },
+        jsPDF: { unit: 'px', format: [794,1123], orientation: 'portrait' }
+      };
+
+      const worker = html2pdf().set(opt).from(clone);
+      const pdf = await worker.toPdf().get('pdf');
+
+      if (pdf.internal.getNumberOfPages() > 1) {
+        pdf.deletePage(2);
       }
-    );
 
-  }
-  catch(err){
-    console.error(err);
-    alert('Gagal generate PDF');
-    resetTombolSelesai(btnProses);
-  }
-}
+      const base64DataRaw = pdf.output('datauristring').split(',')[1];
 
+      const dataKirimBackend = {
+        noInvoice: document.getElementById('pdfInvoice').innerText,
+        tanggal: document.getElementById('pdfTanggal').innerText,
+        id: document.getElementById('pdfIdpel').innerText,
+        nama: document.getElementById('pdfNama').innerText,
+        periode: document.getElementById('inputPeriodeTagihan').value,
+        paket: document.getElementById('pdfDeskripsi').innerText,
+        tagihan: document.getElementById('pdfGrand').innerText,
+        base64: base64DataRaw,
+        isExpired: statusSistemExpired,
+        jumlahBulan: jumlahLompatBulanTerpilih
+      };
+
+      // Unduh PDF ke komputer/HP
+      await worker.save();
+      document.body.removeChild(wrapper);
+
+      // Tutup Modal & Munculkan Toast Floating Berhasil
+      bersihkanModal();
+      tampilkanPopupSukses(`Invoice ${p.NAMA} berhasil diperpanjang & diunduh!`);
+
+      // Kirim Data ke Cloud Apps Script di Background
+      callAPI('simpanInvoice', dataKirimBackend, function(urlDrivePdf) {
+        console.log("Invoice tersimpan di Drive:", urlDrivePdf);
+        ambilWaktuInternetDanLoad();
+      }, function(errMessage) {
+        console.warn("Koneksi cloud delay, memperbarui tabel lokal:", errMessage);
+        ambilWaktuInternetDanLoad();
+      });
+
+    } catch(err) {
+      console.error(err);
+      alert('Gagal membuat berkas PDF!');
+      if (btnProses) {
+        btnProses.disabled = false;
+        btnProses.innerText = "Perpanjang";
+      }
+    }
+  }
+
+  // 10. Proses Rollback Invoice Pelanggan
+  function prosesRollbackPelangganDariModal() {
+    const p = allPelanggan.find(x => String(x.ID) === String(idPelangganDipilih));
+    if (!p) return;
+
+    if (confirm(`Apakah Anda yakin ingin melakukan Rollback (Membatalkan Perpanjangan) untuk pelanggan "${p.NAMA}"?\n\nStatus data di Google Sheets akan dikembalikan ke posisi semula dan data invoice yang sudah di buat akan di hapus.`)) {
+      
+      const btnRollback = document.getElementById('btnRollbackInvoiceModal');
+      if (btnRollback) {
+        btnRollback.disabled = true;
+        btnRollback.innerHTML = `<span class="spinner-border spinner-border-sm" role="status"></span> Memproses Rollback...`;
+      }
+
+      callAPI('rollbackInvoice', { id: p.ID }, function(response) {
+        bersihkanModal();
+        tampilkanPopupSukses(`Data perpanjangan ${p.NAMA} berhasil dibatalkan!`);
+        ambilWaktuInternetDanLoad();
+      }, function(err) {
+        bersihkanModal();
+        tampilkanPopupSukses(`Rollback terkirim, memperbarui tabel...`);
+        ambilWaktuInternetDanLoad();
+      });
+    }
+  }
+
+  // Helper Pembersih Modal & Backdrop
   function bersihkanModal() {
-    if(modalInvoiceInstance){
+    if (modalInvoiceInstance) {
       modalInvoiceInstance.hide();
       modalInvoiceInstance = null;
     }
     document.querySelectorAll('.modal-backdrop').forEach(e => e.remove());
     document.body.classList.remove('modal-open');
-    renderTagihanTable();
-  }
-
-  function resetTombolSelesai(btn) {
-    btn.disabled = false;
-    btn.innerText = "Perpanjang";
   }
 </script>
 

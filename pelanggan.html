@@ -223,16 +223,41 @@ if(checkLogin()){
     loadDataPelanggan();
   };
 
-  function loadDataPelanggan(){
+  function loadDataPelanggan(isBackgroundSync = false){
     var tbody = document.getElementById('tabelPelangganBody');
-    if (tbody) {
-      tbody.innerHTML = '<tr><td colspan="10" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary" role="status"></div> Memuat data pelanggan...</td></tr>';
+    const cachedData = localStorage.getItem('CACHE_LOCAL_PELANGGAN');
+
+    // 1. Tampilkan animasi spinner loading terlebih dahulu
+    if (!isBackgroundSync && tbody) {
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary" role="status"></div> Memuat data pelanggan...</td></tr>';
     }
 
+    // 2. Beri sedikit jeda (300ms) agar animasi spinner sempat terlihat
+    setTimeout(function() {
+      if (cachedData) {
+        try {
+          allPelanggan = JSON.parse(cachedData);
+          renderTable(allPelanggan);
+          updateTotalPelanggan(allPelanggan);
+        } catch (e) {
+          console.warn("Gagal membaca cache lokal pelanggan:", e);
+        }
+      }
+    }, 300);
+
+    // 3. Sync data terbaru dari server Apps Script secara paralel
     callAPI('getPelangganData', null, function(data){
-      allPelanggan = data;
-      renderTable(data);
-      updateTotalPelanggan(data);
+      if (Array.isArray(data)) {
+        allPelanggan = data;
+        localStorage.setItem('CACHE_LOCAL_PELANGGAN', JSON.stringify(data));
+        renderTable(data);
+        updateTotalPelanggan(data);
+      }
+    }, function(err) {
+      console.error("Gagal sinkronisasi data server:", err);
+      if (!cachedData && tbody) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger py-4">⚠️ Gagal memuat data dari server. Silakan muat ulang halaman.</td></tr>';
+      }
     });
   }
 
@@ -308,16 +333,12 @@ if(checkLogin()){
 
   let searchTimeout;
 
-function filterPelangganDebounce() {
-  // Bersihkan timeout sebelumnya jika pengguna masih mengetik
-  clearTimeout(searchTimeout);
-  
-  // Berikan jeda 250ms sebelum menjalankan fungsi filter
-  searchTimeout = setTimeout(function() {
-    filterPelanggan();
-  }, 250); 
-}
-
+  function filterPelangganDebounce() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(function() {
+      filterPelanggan();
+    }, 250); 
+  }
 
   function filterByPaket(paket){ renderTable(allPelanggan.filter(p => String(p.PAKET).toUpperCase().includes(paket))); }
   function filterByType(type){ renderTable(allPelanggan.filter(p => String(p.TIPE_LANGGANAN).toUpperCase() == type)); }
@@ -332,8 +353,6 @@ function filterPelangganDebounce() {
     }));
   }
 
-  
-
   function openModal(){
     editMode = false; currentEditId = '';
     document.getElementById('modalTitle').innerText = 'Tambah Pelanggan';
@@ -346,7 +365,7 @@ function filterPelangganDebounce() {
       inputId.value = '';
     }
     
-	cekDuplikatIdLive(); // <--- TAMBAHKAN BARIS INI (mereset tampilan merah)
+    cekDuplikatIdLive();
     loadPaketByTipe();
     new bootstrap.Modal(document.getElementById('modalPelanggan')).show();
   }
@@ -413,7 +432,6 @@ function filterPelangganDebounce() {
     const inputId = elId.value.trim();
     const nama = elNama.value.trim();
 
-    // Validasi input Wajib diisi
     if(!inputId){
       alert('ID Pelanggan wajib diisi!');
       elId.focus();
@@ -426,7 +444,6 @@ function filterPelangganDebounce() {
       return;
     }
 
-	// Cek duplikasi ID Pelanggan & ubah warna input jadi merah secara otomatis
     if (cekDuplikatIdLive()) {
       alert('ID Pelanggan "' + inputId + '" sudah ada/digunakan! Harap gunakan ID yang lain.');
       elId.focus();
@@ -458,19 +475,40 @@ function filterPelangganDebounce() {
         btnSimpan.disabled = false;
         btnSimpan.innerText = 'Simpan';
       }
-      
-      bootstrap.Modal.getInstance(document.getElementById('modalPelanggan')).hide();
-      loadDataPelanggan();
+
+      // Update data di memory lokal (allPelanggan) secara langsung
+      if (editMode) {
+        const index = allPelanggan.findIndex(p => p.ID == currentEditId);
+        if (index !== -1) {
+          allPelanggan[index] = { ...allPelanggan[index], ...formData };
+        }
+      } else {
+        allPelanggan.unshift(formData);
+      }
+
+      // Simpan pembaruan ke Cache Local
+      localStorage.setItem('CACHE_LOCAL_PELANGGAN', JSON.stringify(allPelanggan));
+
+      // Render ulang tabel & counter secara instan
+      renderTable(allPelanggan);
+      updateTotalPelanggan(allPelanggan);
+
+      // Sembunyikan Modal
+      const modalEl = document.getElementById('modalPelanggan');
+      const modalInstance = bootstrap.Modal.getInstance(modalEl);
+      if (modalInstance) modalInstance.hide();
+
+      // Sinkronkan data latar belakang dari server
+      loadDataPelanggan(true);
+
     }, function(err){
       alert('Gagal menyimpan pelanggan: ' + err);
-      
       if(btnSimpan) {
         btnSimpan.disabled = false;
         btnSimpan.innerText = 'Simpan';
       }
     });
   }
-  
 
   function editPelanggan(id){
     editMode = true; currentEditId = id;
@@ -484,8 +522,8 @@ function filterPelangganDebounce() {
       inputId.style.backgroundColor = '';
       inputId.value = p.ID;
     }
-	
-	cekDuplikatIdLive(); // <--- TAMBAHKAN BARIS INI
+    
+    cekDuplikatIdLive();
     
     document.getElementById('f_nama').value = p.NAMA;
     document.getElementById('f_alamat').value = p.ALAMAT;
@@ -501,13 +539,19 @@ function filterPelangganDebounce() {
   }
 
   function hapusPelanggan(id){
-	  if(confirm('Hapus pelanggan?')){
-		callAPI('deletePelanggan', id, function(res){
-		  alert('Data pelanggan berhasil dihapus!');
-		  loadDataPelanggan();
-		});
-	  }
-	}
+    if(confirm('Hapus pelanggan?')){
+      callAPI('deletePelanggan', id, function(res){
+        alert('Data pelanggan berhasil dihapus!');
+        
+        // Hapus data dari memori & cache lokal secara langsung
+        allPelanggan = allPelanggan.filter(p => p.ID != id);
+        localStorage.setItem('CACHE_LOCAL_PELANGGAN', JSON.stringify(allPelanggan));
+        
+        renderTable(allPelanggan);
+        updateTotalPelanggan(allPelanggan);
+      });
+    }
+  }
 
   function pilihKodeNegara(){ document.getElementById('f_kode_negara').value = document.getElementById('kode_negara_select').value; }
   function formatNomor(el){ el.value = el.value.replace(/\D/g,'').replace(/^0+/,''); }
