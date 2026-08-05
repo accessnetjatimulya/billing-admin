@@ -66,55 +66,79 @@ if(checkLogin()){
 </script>
 
 <script>
+  let cacheInvoices = [];
+
   window.onload = function(){ loadDataInvoice(); };
   	
   function loadDataInvoice(){
     const tbody = document.getElementById("tabelInvoiceBody");
-    if (tbody) {
+
+    // 1. Dapatkan Data Instan dari Cache Browser (Loading Jadi 0 Detik)
+    const localData = localStorage.getItem('CACHE_DATA_INVOICE');
+    if (localData) {
+      try {
+        cacheInvoices = JSON.parse(localData);
+        renderTabelInvoice(cacheInvoices);
+      } catch(e) {
+        console.warn("Gagal membaca cache:", e);
+      }
+    } else if (tbody) {
       tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary" role="status"></div> Memuat data invoice tersimpan...</td></tr>';
     }
 
+    // 2. Ambil Data Terbaru dari Server di Background
     callAPI('getDataInvoice', null, function(data){
-      if(!data || data.length === 0){
-        tbody.innerHTML = '<tr><td colspan="9" class="text-center">Tidak ada data invoice tersimpan</td></tr>';
-        return;
+      if (data && data.length > 0) {
+        cacheInvoices = data;
+        localStorage.setItem('CACHE_DATA_INVOICE', JSON.stringify(data));
+        renderTabelInvoice(cacheInvoices);
+      } else if (!cacheInvoices || cacheInvoices.length === 0) {
+        if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="text-center">Tidak ada data invoice tersimpan</td></tr>';
       }
-      let html = '';
-      data.forEach(function(inv){
-        html += `
-          <tr>
-            <td>${inv.NO_INVOICE}</td>
-            <td>${inv.TANGGAL}</td>
-            <td>${inv.ID}</td>
-            <td>${inv.NAMA}</td>
-            <td>${formatPeriode(inv.PERIODE)}</td>
-            <td>${inv.PAKET}</td>
-            <td>Rp. ${Number(inv.TAGIHAN).toLocaleString('id-ID')}</td>
-            <td>${inv.PDF ? `<a href="${inv.PDF}" target="_blank" class="btn btn-sm btn-danger">PDF</a>` : '-'}</td>
-            <td><button class="btn btn-sm btn-dark" onclick="hapusInvoice('${inv.NO_INVOICE}')">Hapus</button></td>
-          </tr>`;
-      });
-      tbody.innerHTML = html;
+    }, function(err){
+      console.error("Gagal sinkron server:", err);
+      if (tbody && (!cacheInvoices || cacheInvoices.length === 0)) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center text-danger">Gagal terhubung ke server</td></tr>';
+      }
     });
+  }
+
+  function renderTabelInvoice(data){
+    const tbody = document.getElementById("tabelInvoiceBody");
+    if (!tbody) return;
+
+    if (!data || data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9" class="text-center">Tidak ada data invoice tersimpan</td></tr>';
+      return;
+    }
+
+    let html = '';
+    data.forEach(function(inv){
+      html += `
+        <tr>
+          <td>${inv.NO_INVOICE || '-'}</td>
+          <td>${inv.TANGGAL || '-'}</td>
+          <td>${inv.ID || '-'}</td>
+          <td>${inv.NAMA || '-'}</td>
+          <td>${formatPeriode(inv.PERIODE)}</td>
+          <td>${inv.PAKET || '-'}</td>
+          <td>Rp. ${Number(inv.TAGIHAN || 0).toLocaleString('id-ID')}</td>
+          <td>${inv.PDF ? `<a href="${inv.PDF}" target="_blank" class="btn btn-sm btn-danger">PDF</a>` : '-'}</td>
+          <td><button class="btn btn-sm btn-dark" onclick="hapusInvoice('${inv.NO_INVOICE}')">Hapus</button></td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
+    filterInvoice();
   }
 
   function formatPeriode(periode){
 	  if(!periode) return '-';
 	  const bulan = [
-		'JANUARI',
-		'FEBRUARI',
-		'MARET',
-		'APRIL',
-		'MEI',
-		'JUNI',
-		'JULI',
-		'AGUSTUS',
-		'SEPTEMBER',
-		'OKTOBER',
-		'NOVEMBER',
-		'DESEMBER'
+		'JANUARI', 'FEBRUARI', 'MARET', 'APRIL', 'MEI', 'JUNI',
+		'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER'
 	  ];
 	  const tgl = new Date(periode);
+	  if (isNaN(tgl.getTime())) return periode;
 	  return bulan[tgl.getMonth()] + ' ' + tgl.getFullYear();
 	}
 
@@ -123,32 +147,24 @@ if(checkLogin()){
     const rows = document.querySelectorAll('#tabelInvoiceBody tr');
     
     rows.forEach(row => {
-      // Menggunakan textContent jauh lebih ringan dibanding innerText
       const text = row.textContent.toLowerCase(); 
       row.style.display = text.includes(keyword) ? '' : 'none';
     });
   }
 
   function hapusInvoice(noInvoice){
-
 	  if(confirm('Yakin ingin menghapus invoice ini?')) {
-
 		callAPI('deleteInvoice', noInvoice, function(res){
-
 		  alert('Data invoice berhasil dihapus');
-
-		  loadDataInvoice();
-
+          // Update cache lokal langsung agar hapus tidak perlu loading ulang
+          cacheInvoices = cacheInvoices.filter(item => item.NO_INVOICE !== noInvoice);
+          localStorage.setItem('CACHE_DATA_INVOICE', JSON.stringify(cacheInvoices));
+          renderTabelInvoice(cacheInvoices);
 		}, function(err){
-
 		  alert('Gagal menghapus invoice');
-
 		  console.error(err);
-
 		});
-
 	  }
-
 	}
 </script>
 
